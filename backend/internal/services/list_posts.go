@@ -58,14 +58,14 @@ func (s *ListPosts) Exec(ctx context.Context, req *ListPostsReq) (*ListPostsResp
 		return nil, err
 	}
 
-	authorsIDs := make([]string, 0)
+	authorsIDs := make([]any, 0)
 	placeholders := make([]string, 0)
 	for i, post := range posts {
 		authorsIDs = append(authorsIDs, post.AuthorID)
 		placeholders = append(placeholders, fmt.Sprintf("$%d", i+1))
 	}
 
-	authors, err := s.userDAO.FindAll(ctx, "id IN ("+strings.Join(placeholders, ",")+")", "", authorsIDs)
+	authors, err := s.userDAO.FindAll(ctx, "id IN ("+strings.Join(placeholders, ",")+")", "", authorsIDs...)
 	if err != nil {
 		return nil, err
 	}

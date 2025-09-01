@@ -69,7 +69,7 @@ func (s *GetPostBySlug) Exec(ctx context.Context, req *GetPostBySlugReq) (*GetPo
 		return nil, fmt.Errorf("failed to load comments: %w", err)
 	}
 
-	commentAuthorsIDs := make([]string, 0)
+	commentAuthorsIDs := make([]any, 0)
 	placeholders := make([]string, 0)
 	for i, comment := range comments {
 		commentAuthorsIDs = append(commentAuthorsIDs, comment.AuthorID)
@@ -78,7 +78,7 @@ func (s *GetPostBySlug) Exec(ctx context.Context, req *GetPostBySlugReq) (*GetPo
 
 	var commentAuthors []*dao.User
 	if len(commentAuthorsIDs) > 0 {
-		commentAuthors, err = s.userDAO.FindAll(ctx, "id IN ("+strings.Join(placeholders, ",")+")", "", commentAuthorsIDs)
+		commentAuthors, err = s.userDAO.FindAll(ctx, "id IN ("+strings.Join(placeholders, ",")+")", "", commentAuthorsIDs...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load comment authors: %w", err)
 		}
