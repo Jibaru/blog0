@@ -58,7 +58,7 @@ func (s *FinishOAuth) Exec(ctx context.Context, req FinishOAuthReq) (*FinishOAut
 		return nil, err
 	}
 
-	user, err := s.userDAO.FindOne(ctx, "email = $1", email)
+	user, err := s.userDAO.FindOne(ctx, "email = $1", "", email)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		newUser, err := domain.NewUser(s.nextID(), email, username)
 		if err != nil {
