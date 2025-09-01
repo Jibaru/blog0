@@ -58,6 +58,15 @@ func (s *ListPosts) Exec(ctx context.Context, req *ListPostsReq) (*ListPostsResp
 		return nil, err
 	}
 
+	if len(posts) == 0 {
+		return &ListPostsResp{
+			Page:    req.Page,
+			PerPage: req.PerPage,
+			Total:   int(totalPosts),
+			Items:   make([]PostItem, 0),
+		}, nil
+	}
+
 	authorsIDs := make([]any, 0)
 	placeholders := make([]string, 0)
 	for i, post := range posts {

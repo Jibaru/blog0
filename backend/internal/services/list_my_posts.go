@@ -60,6 +60,15 @@ func (s *ListMyPosts) Exec(ctx context.Context, req *ListMyPostsReq) (*ListMyPos
 		return nil, err
 	}
 
+	if len(posts) == 0 {
+		return &ListMyPostsResp{
+			Page:    req.Page,
+			PerPage: req.PerPage,
+			Total:   int(totalPosts),
+			Items:   make([]MyPostItem, 0),
+		}, nil
+	}
+
 	items := make([]MyPostItem, 0)
 	for _, post := range posts {
 		status := "draft"
