@@ -208,7 +208,7 @@ func (dao *PostLikeDAO) DeleteManyByPks(ctx context.Context, pks []string) error
 	return err
 }
 
-func (dao *PostLikeDAO) FindOne(ctx context.Context, where string, args ...interface{}) (*PostLike, error) {
+func (dao *PostLikeDAO) FindOne(ctx context.Context, where string, sort string, args ...interface{}) (*PostLike, error) {
 	query := `
 		SELECT id, user_id, post_id, created_at
 		FROM post_likes
@@ -216,6 +216,10 @@ func (dao *PostLikeDAO) FindOne(ctx context.Context, where string, args ...inter
 
 	if where != "" {
 		query += " WHERE " + where
+	}
+
+	if sort != "" {
+		query += " ORDER BY " + sort
 	}
 
 	row := dao.queryRowContext(ctx, query, args...)
@@ -235,7 +239,7 @@ func (dao *PostLikeDAO) FindOne(ctx context.Context, where string, args ...inter
 	return &m, nil
 }
 
-func (dao *PostLikeDAO) FindAll(ctx context.Context, where string, args ...interface{}) ([]*PostLike, error) {
+func (dao *PostLikeDAO) FindAll(ctx context.Context, where string, sort string, args ...interface{}) ([]*PostLike, error) {
 	query := `
 		SELECT id, user_id, post_id, created_at
 		FROM post_likes
@@ -243,6 +247,10 @@ func (dao *PostLikeDAO) FindAll(ctx context.Context, where string, args ...inter
 
 	if where != "" {
 		query += " WHERE " + where
+	}
+
+	if sort != "" {
+		query += " ORDER BY " + sort
 	}
 
 	rows, err := dao.queryContext(ctx, query, args...)
@@ -273,7 +281,7 @@ func (dao *PostLikeDAO) FindAll(ctx context.Context, where string, args ...inter
 	return models, nil
 }
 
-func (dao *PostLikeDAO) FindPaginated(ctx context.Context, limit, offset int, where string, args ...interface{}) ([]*PostLike, error) {
+func (dao *PostLikeDAO) FindPaginated(ctx context.Context, limit, offset int, where string, sort string, args ...interface{}) ([]*PostLike, error) {
 	query := `
 		SELECT id, user_id, post_id, created_at
 		FROM post_likes
@@ -281,6 +289,10 @@ func (dao *PostLikeDAO) FindPaginated(ctx context.Context, limit, offset int, wh
 
 	if where != "" {
 		query += " WHERE " + where
+	}
+
+	if sort != "" {
+		query += " ORDER BY " + sort
 	}
 
 	query += fmt.Sprintf(" LIMIT %d OFFSET %d", limit, offset)

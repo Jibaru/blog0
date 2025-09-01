@@ -32,14 +32,14 @@ type UserDAO interface {
 	// DeleteManyByPks deletes multiple User records by primary keys
 	DeleteManyByPks(ctx context.Context, pks []string) error
 
-	// FindOne finds a single User with optional where clause
-	FindOne(ctx context.Context, where string, args ...interface{}) (*User, error)
+	// FindOne finds a single User with optional where clause and sort expression
+	FindOne(ctx context.Context, where string, sort string, args ...interface{}) (*User, error)
 
-	// FindAll finds all User records with optional where clause
-	FindAll(ctx context.Context, where string, args ...interface{}) ([]*User, error)
+	// FindAll finds all User records with optional where clause and sort expression
+	FindAll(ctx context.Context, where string, sort string, args ...interface{}) ([]*User, error)
 
-	// FindPaginated finds User records with pagination and optional where clause
-	FindPaginated(ctx context.Context, limit, offset int, where string, args ...interface{}) ([]*User, error)
+	// FindPaginated finds User records with pagination, optional where clause and sort expression
+	FindPaginated(ctx context.Context, limit, offset int, where string, sort string, args ...interface{}) ([]*User, error)
 
 	// Count counts User records with optional where clause
 	Count(ctx context.Context, where string, args ...interface{}) (int64, error)

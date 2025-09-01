@@ -32,14 +32,14 @@ type BookmarkDAO interface {
 	// DeleteManyByPks deletes multiple Bookmark records by primary keys
 	DeleteManyByPks(ctx context.Context, pks []string) error
 
-	// FindOne finds a single Bookmark with optional where clause
-	FindOne(ctx context.Context, where string, args ...interface{}) (*Bookmark, error)
+	// FindOne finds a single Bookmark with optional where clause and sort expression
+	FindOne(ctx context.Context, where string, sort string, args ...interface{}) (*Bookmark, error)
 
-	// FindAll finds all Bookmark records with optional where clause
-	FindAll(ctx context.Context, where string, args ...interface{}) ([]*Bookmark, error)
+	// FindAll finds all Bookmark records with optional where clause and sort expression
+	FindAll(ctx context.Context, where string, sort string, args ...interface{}) ([]*Bookmark, error)
 
-	// FindPaginated finds Bookmark records with pagination and optional where clause
-	FindPaginated(ctx context.Context, limit, offset int, where string, args ...interface{}) ([]*Bookmark, error)
+	// FindPaginated finds Bookmark records with pagination, optional where clause and sort expression
+	FindPaginated(ctx context.Context, limit, offset int, where string, sort string, args ...interface{}) ([]*Bookmark, error)
 
 	// Count counts Bookmark records with optional where clause
 	Count(ctx context.Context, where string, args ...interface{}) (int64, error)

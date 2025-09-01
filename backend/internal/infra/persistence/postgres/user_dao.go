@@ -201,7 +201,7 @@ func (dao *UserDAO) DeleteManyByPks(ctx context.Context, pks []string) error {
 	return err
 }
 
-func (dao *UserDAO) FindOne(ctx context.Context, where string, args ...interface{}) (*User, error) {
+func (dao *UserDAO) FindOne(ctx context.Context, where string, sort string, args ...interface{}) (*User, error) {
 	query := `
 		SELECT id, email, username
 		FROM users
@@ -209,6 +209,10 @@ func (dao *UserDAO) FindOne(ctx context.Context, where string, args ...interface
 
 	if where != "" {
 		query += " WHERE " + where
+	}
+
+	if sort != "" {
+		query += " ORDER BY " + sort
 	}
 
 	row := dao.queryRowContext(ctx, query, args...)
@@ -227,7 +231,7 @@ func (dao *UserDAO) FindOne(ctx context.Context, where string, args ...interface
 	return &m, nil
 }
 
-func (dao *UserDAO) FindAll(ctx context.Context, where string, args ...interface{}) ([]*User, error) {
+func (dao *UserDAO) FindAll(ctx context.Context, where string, sort string, args ...interface{}) ([]*User, error) {
 	query := `
 		SELECT id, email, username
 		FROM users
@@ -235,6 +239,10 @@ func (dao *UserDAO) FindAll(ctx context.Context, where string, args ...interface
 
 	if where != "" {
 		query += " WHERE " + where
+	}
+
+	if sort != "" {
+		query += " ORDER BY " + sort
 	}
 
 	rows, err := dao.queryContext(ctx, query, args...)
@@ -264,7 +272,7 @@ func (dao *UserDAO) FindAll(ctx context.Context, where string, args ...interface
 	return models, nil
 }
 
-func (dao *UserDAO) FindPaginated(ctx context.Context, limit, offset int, where string, args ...interface{}) ([]*User, error) {
+func (dao *UserDAO) FindPaginated(ctx context.Context, limit, offset int, where string, sort string, args ...interface{}) ([]*User, error) {
 	query := `
 		SELECT id, email, username
 		FROM users
@@ -272,6 +280,10 @@ func (dao *UserDAO) FindPaginated(ctx context.Context, limit, offset int, where 
 
 	if where != "" {
 		query += " WHERE " + where
+	}
+
+	if sort != "" {
+		query += " ORDER BY " + sort
 	}
 
 	query += fmt.Sprintf(" LIMIT %d OFFSET %d", limit, offset)

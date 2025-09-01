@@ -229,7 +229,7 @@ func (dao *CommentDAO) DeleteManyByPks(ctx context.Context, pks []string) error 
 	return err
 }
 
-func (dao *CommentDAO) FindOne(ctx context.Context, where string, args ...interface{}) (*Comment, error) {
+func (dao *CommentDAO) FindOne(ctx context.Context, where string, sort string, args ...interface{}) (*Comment, error) {
 	query := `
 		SELECT id, post_id, author_id, parent_id, body, created_at, updated_at
 		FROM comments
@@ -237,6 +237,10 @@ func (dao *CommentDAO) FindOne(ctx context.Context, where string, args ...interf
 
 	if where != "" {
 		query += " WHERE " + where
+	}
+
+	if sort != "" {
+		query += " ORDER BY " + sort
 	}
 
 	row := dao.queryRowContext(ctx, query, args...)
@@ -259,7 +263,7 @@ func (dao *CommentDAO) FindOne(ctx context.Context, where string, args ...interf
 	return &m, nil
 }
 
-func (dao *CommentDAO) FindAll(ctx context.Context, where string, args ...interface{}) ([]*Comment, error) {
+func (dao *CommentDAO) FindAll(ctx context.Context, where string, sort string, args ...interface{}) ([]*Comment, error) {
 	query := `
 		SELECT id, post_id, author_id, parent_id, body, created_at, updated_at
 		FROM comments
@@ -267,6 +271,10 @@ func (dao *CommentDAO) FindAll(ctx context.Context, where string, args ...interf
 
 	if where != "" {
 		query += " WHERE " + where
+	}
+
+	if sort != "" {
+		query += " ORDER BY " + sort
 	}
 
 	rows, err := dao.queryContext(ctx, query, args...)
@@ -300,7 +308,7 @@ func (dao *CommentDAO) FindAll(ctx context.Context, where string, args ...interf
 	return models, nil
 }
 
-func (dao *CommentDAO) FindPaginated(ctx context.Context, limit, offset int, where string, args ...interface{}) ([]*Comment, error) {
+func (dao *CommentDAO) FindPaginated(ctx context.Context, limit, offset int, where string, sort string, args ...interface{}) ([]*Comment, error) {
 	query := `
 		SELECT id, post_id, author_id, parent_id, body, created_at, updated_at
 		FROM comments
@@ -308,6 +316,10 @@ func (dao *CommentDAO) FindPaginated(ctx context.Context, limit, offset int, whe
 
 	if where != "" {
 		query += " WHERE " + where
+	}
+
+	if sort != "" {
+		query += " ORDER BY " + sort
 	}
 
 	query += fmt.Sprintf(" LIMIT %d OFFSET %d", limit, offset)

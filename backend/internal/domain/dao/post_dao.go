@@ -32,14 +32,14 @@ type PostDAO interface {
 	// DeleteManyByPks deletes multiple Post records by primary keys
 	DeleteManyByPks(ctx context.Context, pks []string) error
 
-	// FindOne finds a single Post with optional where clause
-	FindOne(ctx context.Context, where string, args ...interface{}) (*Post, error)
+	// FindOne finds a single Post with optional where clause and sort expression
+	FindOne(ctx context.Context, where string, sort string, args ...interface{}) (*Post, error)
 
-	// FindAll finds all Post records with optional where clause
-	FindAll(ctx context.Context, where string, args ...interface{}) ([]*Post, error)
+	// FindAll finds all Post records with optional where clause and sort expression
+	FindAll(ctx context.Context, where string, sort string, args ...interface{}) ([]*Post, error)
 
-	// FindPaginated finds Post records with pagination and optional where clause
-	FindPaginated(ctx context.Context, limit, offset int, where string, args ...interface{}) ([]*Post, error)
+	// FindPaginated finds Post records with pagination, optional where clause and sort expression
+	FindPaginated(ctx context.Context, limit, offset int, where string, sort string, args ...interface{}) ([]*Post, error)
 
 	// Count counts Post records with optional where clause
 	Count(ctx context.Context, where string, args ...interface{}) (int64, error)
