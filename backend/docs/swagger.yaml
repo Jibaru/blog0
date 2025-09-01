@@ -1,0 +1,519 @@
+basePath: /api/v1
+definitions:
+  handlers.CreateCommentReq:
+    properties:
+      body:
+        type: string
+      parent_id:
+        type: string
+    required:
+    - body
+    type: object
+  handlers.ErrorResp:
+    properties:
+      error:
+        type: string
+    type: object
+  services.AuthorInfo:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  services.BookmarkPostResp:
+    properties:
+      bookmark_id:
+        type: string
+      bookmarked:
+        type: boolean
+      created_at:
+        type: string
+      post_slug:
+        type: string
+    type: object
+  services.CommentInfo:
+    properties:
+      author:
+        $ref: '#/definitions/services.AuthorInfo'
+      body:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      parent_id:
+        type: string
+    type: object
+  services.CreateCommentResp:
+    properties:
+      author:
+        $ref: '#/definitions/services.AuthorInfo'
+      body:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      parent_id:
+        type: string
+      post_slug:
+        type: string
+    type: object
+  services.FollowUserResp:
+    properties:
+      followers_count:
+        type: integer
+      following:
+        type: boolean
+    type: object
+  services.GetAuthorInfoResp:
+    properties:
+      followers_count:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      posts_count:
+        type: integer
+      top_posts:
+        items:
+          $ref: '#/definitions/services.TopPostInfo'
+        type: array
+    type: object
+  services.GetPostBySlugResp:
+    properties:
+      author:
+        $ref: '#/definitions/services.AuthorInfo'
+      comments:
+        items:
+          $ref: '#/definitions/services.CommentInfo'
+        type: array
+      id:
+        type: string
+      likes_count:
+        type: integer
+      published_at:
+        type: string
+      raw_markdown:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+    type: object
+  services.ListPostsResp:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/services.PostItem'
+        type: array
+      page:
+        type: integer
+      per_page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  services.PostItem:
+    properties:
+      author:
+        type: string
+      published_at:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+    type: object
+  services.ToggleLikeResp:
+    properties:
+      liked:
+        type: boolean
+      likes_count:
+        type: integer
+    type: object
+  services.TopPostInfo:
+    properties:
+      id:
+        type: string
+      likes_count:
+        type: integer
+      slug:
+        type: string
+      title:
+        type: string
+    type: object
+  services.UnbookmarkPostResp:
+    properties:
+      bookmarked:
+        type: boolean
+    type: object
+  services.UnfollowUserResp:
+    properties:
+      followers_count:
+        type: integer
+      following:
+        type: boolean
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is the blog0 API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Blog0 API
+  version: "1.0"
+paths:
+  /api/v1/auth/{provider}:
+    get:
+      consumes:
+      - application/json
+      description: StartOAuth
+      produces:
+      - application/json
+      responses:
+        "307":
+          description: Temporary Redirect
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+      summary: StartOAuth
+  /api/v1/auth/{provider}/callback:
+    get:
+      consumes:
+      - application/json
+      description: OAuthCallback
+      produces:
+      - application/json
+      responses:
+        "307":
+          description: Temporary Redirect
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+      summary: OAuthCallback
+  /api/v1/posts:
+    get:
+      consumes:
+      - application/json
+      description: List all posts with pagination and ordering
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      - default: published_at_desc
+        description: Order by
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.ListPostsResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+      summary: List all posts
+  /api/v1/posts/{slug}:
+    get:
+      consumes:
+      - application/json
+      description: Get post details by slug including comments
+      parameters:
+      - description: Post slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.GetPostBySlugResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+      summary: Get post by slug
+  /api/v1/posts/{slug}/bookmarks:
+    delete:
+      consumes:
+      - application/json
+      description: Remove post from user's bookmarks (requires authentication)
+      parameters:
+      - description: Post slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.UnbookmarkPostResp'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+      security:
+      - BearerAuth: []
+      summary: Remove bookmark
+    post:
+      consumes:
+      - application/json
+      description: Add post to user's bookmarks (requires authentication)
+      parameters:
+      - description: Post slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/services.BookmarkPostResp'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+      security:
+      - BearerAuth: []
+      summary: Bookmark post
+  /api/v1/posts/{slug}/comments:
+    post:
+      consumes:
+      - application/json
+      description: Create a new comment on a post (requires authentication)
+      parameters:
+      - description: Post slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Comment data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateCommentReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/services.CreateCommentResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+      security:
+      - BearerAuth: []
+      summary: Create comment on post
+  /api/v1/posts/{slug}/likes:
+    post:
+      consumes:
+      - application/json
+      description: Like or unlike a post (requires authentication)
+      parameters:
+      - description: Post slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.ToggleLikeResp'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+      security:
+      - BearerAuth: []
+      summary: Toggle like on post
+  /api/v1/users/{author_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get public information about an author
+      parameters:
+      - description: Author ID
+        in: path
+        name: author_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.GetAuthorInfoResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+      summary: Get author information
+  /api/v1/users/{author_id}/follow:
+    delete:
+      consumes:
+      - application/json
+      description: Unfollow an author (requires authentication)
+      parameters:
+      - description: Author ID
+        in: path
+        name: author_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.UnfollowUserResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+      security:
+      - BearerAuth: []
+      summary: Unfollow user
+    post:
+      consumes:
+      - application/json
+      description: Follow an author (requires authentication)
+      parameters:
+      - description: Author ID
+        in: path
+        name: author_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.FollowUserResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResp'
+      security:
+      - BearerAuth: []
+      summary: Follow user
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
