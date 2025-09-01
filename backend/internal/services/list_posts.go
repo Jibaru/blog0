@@ -113,7 +113,7 @@ func (s *ListPosts) ParseRequest(c *gin.Context) (*ListPostsReq, error) {
 		}
 	}
 
-	order := "published_at_desc"
+	order := "desc"
 	if o := c.Query("order"); o != "" {
 		order = o
 	}

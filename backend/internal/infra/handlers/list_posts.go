@@ -15,7 +15,7 @@ import (
 // @Produce      json
 // @Param        page     query    int    false  "Page number" default(1)
 // @Param        per_page query    int    false  "Items per page" default(20)
-// @Param        order    query    string false  "Order by" default(published_at_desc)
+// @Param        order    query    string false  "Order by" default(desc)
 // @Success      200      {object} services.ListPostsResp
 // @Failure      400      {object} ErrorResp
 // @Failure      500      {object} ErrorResp
