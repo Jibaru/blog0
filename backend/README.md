@@ -257,15 +257,78 @@ The application expects the following PostgreSQL tables:
 - Infrastructure concerns are isolated
 - Each layer has a single responsibility
 
+## Database Migrations
+
+This project uses [Goose](https://github.com/pressly/goose) for database migrations. Migrations are located in `db/migrations/` and follow the goose format with `-- +goose Up` and `-- +goose Down` annotations.
+
+### Migration Commands
+
+```bash
+# Apply all pending migrations
+make migrate-up
+
+# Roll back the last migration
+make migrate-down
+
+# Check migration status
+make migrate-status
+
+# Roll back all migrations (use with caution)
+make migrate-reset
+
+# Set up development environment (runs migrations)
+make dev-setup
+```
+
+### Manual Goose Commands
+
+If you prefer using goose directly:
+
+```bash
+# Goose automatically loads configuration from .env
+goose up                    # Apply migrations
+goose down                  # Roll back one migration
+goose status                # Check status
+goose create <name> sql     # Create new migration
+```
+
+### Migration Configuration
+
+Goose is configured via environment variables in `.env`:
+
+```env
+GOOSE_DRIVER="postgres"
+GOOSE_DBSTRING="your_postgres_connection_string"
+GOOSE_MIGRATION_DIR="./db/migrations"
+```
+
 ## Running the Application
 
 1. Set up PostgreSQL database
-2. Configure environment variables
-3. Run database migrations
+2. Configure environment variables in `.env`
+3. Run database migrations:
+   ```bash
+   make migrate-up
+   # or
+   make dev-setup
+   ```
 4. Start the server:
-
-```bash
-go run cmd/main.go
-```
+   ```bash
+   make run
+   # or
+   go run cmd/app/main.go
+   ```
 
 The server will start on the configured port with Swagger documentation available at `/api/swagger/index.html`.
+
+## Available Make Commands
+
+```bash
+make run            # Start the development server
+make build          # Build the application (includes Swagger generation)
+make gen            # Regenerate DAO interfaces and implementations
+make migrate-up     # Apply database migrations
+make migrate-down   # Roll back last migration
+make migrate-status # Check migration status
+make dev-setup      # Set up development environment
+```
