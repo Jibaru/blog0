@@ -31,21 +31,27 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 		Endpoint:     google.Endpoint,
 	}
 
+	postDAO := postgres.NewPostDAO(db)
 	userDAO := postgres.NewUserDAO(db)
+	commentDAO := postgres.NewCommentDAO(db)
+	postLikeDAO := postgres.NewPostLikeDAO(db)
+	bookmarkDAO := postgres.NewBookmarkDAO(db)
 
 	nextIDFunc := uuid.NewString
 
 	startOAuthServ := services.NewStartOAuth(googleOAuthConfig)
 	finishOAuthServ := services.NewFinishOAuth(userDAO, googleOAuthConfig, infraServices.GoogleInfoExtractor, nextIDFunc, cfg)
-	listPostsServ := services.NewListPosts()
-	getPostBySlugServ := services.NewGetPostBySlug()
-	createCommentServ := services.NewCreateComment()
-	toggleLikeServ := services.NewToggleLike()
-	bookmarkPostServ := services.NewBookmarkPost()
-	unbookmarkPostServ := services.NewUnbookmarkPost()
-	followUserServ := services.NewFollowUser()
-	unfollowUserServ := services.NewUnfollowUser()
-	getAuthorInfoServ := services.NewGetAuthorInfo()
+	listPostsServ := services.NewListPosts(postDAO, userDAO)
+	getPostBySlugServ := services.NewGetPostBySlug(postDAO, userDAO, commentDAO, postLikeDAO)
+	createCommentServ := services.NewCreateComment(postDAO, userDAO, commentDAO, nextIDFunc)
+	toggleLikeServ := services.NewToggleLike(postDAO, postLikeDAO, nextIDFunc)
+	bookmarkPostServ := services.NewBookmarkPost(postDAO, bookmarkDAO, nextIDFunc)
+	unbookmarkPostServ := services.NewUnbookmarkPost(postDAO, bookmarkDAO)
+	createPostServ := services.NewCreatePost(postDAO, nextIDFunc)
+	updatePostServ := services.NewUpdatePost(postDAO)
+	deletePostServ := services.NewDeletePost(postDAO)
+	listMyPostsServ := services.NewListMyPosts(postDAO, userDAO)
+	getAuthorInfoServ := services.NewGetAuthorInfo(userDAO, postDAO, postLikeDAO)
 
 	api := router.Group("/api/v1")
 	{
@@ -58,12 +64,17 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 
 		api.Use(middlewares.HasAuthorization(cfg.JWTSecret))
 		{
+			// User-specific endpoints (my content)
+			api.POST("/me/posts", handlers.CreatePost(createPostServ))
+			api.PUT("/me/posts/:slug", handlers.UpdatePost(updatePostServ))
+			api.DELETE("/me/posts/:slug", handlers.DeletePost(deletePostServ))
+			api.GET("/me/posts", handlers.ListMyPosts(listMyPostsServ))
+			
+			// Post interactions
 			api.POST("/posts/:slug/comments", handlers.CreateComment(createCommentServ))
 			api.POST("/posts/:slug/likes", handlers.ToggleLike(toggleLikeServ))
 			api.POST("/posts/:slug/bookmarks", handlers.BookmarkPost(bookmarkPostServ))
 			api.DELETE("/posts/:slug/bookmarks", handlers.UnbookmarkPost(unbookmarkPostServ))
-			api.POST("/users/:author_id/follow", handlers.FollowUser(followUserServ))
-			api.DELETE("/users/:author_id/follow", handlers.UnfollowUser(unfollowUserServ))
 		}
 	}
 
