@@ -80,7 +80,7 @@ func (s *FinishOAuth) Exec(ctx context.Context, req FinishOAuthReq) (*FinishOAut
 		return nil, err
 	}
 
-	url := fmt.Sprintf("%s/login?token=%s&id=%s&email=%s&username=%s",
+	url := fmt.Sprintf("%s/auth/callback/google?token=%s&id=%s&email=%s&username=%s",
 		s.cfg.WebBaseURI,
 		tokenString,
 		user.ID,
