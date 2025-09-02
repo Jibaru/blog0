@@ -34,7 +34,7 @@ func HasAuthorization(jwtSecret string) gin.HandlerFunc {
 			return
 		}
 
-		c.Set("AuthenticatedUserID", userID)
+		c.Set("user_id", userID)
 
 		c.Next()
 	}
