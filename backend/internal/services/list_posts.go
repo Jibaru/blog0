@@ -13,8 +13,10 @@ import (
 )
 
 type ListPosts struct {
-	postDAO dao.PostDAO
-	userDAO dao.UserDAO
+	postDAO     dao.PostDAO
+	userDAO     dao.UserDAO
+	postLikeDAO dao.PostLikeDAO
+	commentDAO  dao.CommentDAO
 }
 
 type ListPostsReq struct {
@@ -24,10 +26,12 @@ type ListPostsReq struct {
 }
 
 type PostItem struct {
-	Title       string    `json:"title"`
-	Author      string    `json:"author"`
-	PublishedAt time.Time `json:"published_at"`
-	Slug        string    `json:"slug"`
+	Title        string    `json:"title"`
+	Author       string    `json:"author"`
+	PublishedAt  time.Time `json:"published_at"`
+	Slug         string    `json:"slug"`
+	LikeCount    int       `json:"like_count"`
+	CommentCount int       `json:"comment_count"`
 }
 
 type ListPostsResp struct {
@@ -37,10 +41,12 @@ type ListPostsResp struct {
 	Items   []PostItem `json:"items"`
 }
 
-func NewListPosts(postDAO dao.PostDAO, userDAO dao.UserDAO) *ListPosts {
+func NewListPosts(postDAO dao.PostDAO, userDAO dao.UserDAO, postLikeDAO dao.PostLikeDAO, commentDAO dao.CommentDAO) *ListPosts {
 	return &ListPosts{
-		postDAO: postDAO,
-		userDAO: userDAO,
+		postDAO:     postDAO,
+		userDAO:     userDAO,
+		postLikeDAO: postLikeDAO,
+		commentDAO:  commentDAO,
 	}
 }
 
@@ -84,6 +90,26 @@ func (s *ListPosts) Exec(ctx context.Context, req *ListPostsReq) (*ListPostsResp
 		authorsMap[author.ID] = author
 	}
 
+	// Get like counts for all posts
+	likeCounts := make(map[string]int)
+	for _, post := range posts {
+		count, err := s.postLikeDAO.Count(ctx, "post_id = $1", post.ID)
+		if err != nil {
+			return nil, err
+		}
+		likeCounts[post.ID] = int(count)
+	}
+
+	// Get comment counts for all posts
+	commentCounts := make(map[string]int)
+	for _, post := range posts {
+		count, err := s.commentDAO.Count(ctx, "post_id = $1", post.ID)
+		if err != nil {
+			return nil, err
+		}
+		commentCounts[post.ID] = int(count)
+	}
+
 	items := make([]PostItem, 0)
 	for _, post := range posts {
 		author, ok := authorsMap[post.AuthorID]
@@ -92,10 +118,12 @@ func (s *ListPosts) Exec(ctx context.Context, req *ListPostsReq) (*ListPostsResp
 		}
 
 		items = append(items, PostItem{
-			Title:       post.Title,
-			Author:      author.Username,
-			PublishedAt: *post.PublishedAt,
-			Slug:        post.Slug,
+			Title:        post.Title,
+			Author:       author.Username,
+			PublishedAt:  *post.PublishedAt,
+			Slug:         post.Slug,
+			LikeCount:    likeCounts[post.ID],
+			CommentCount: commentCounts[post.ID],
 		})
 	}
 

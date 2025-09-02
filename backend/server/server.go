@@ -41,7 +41,7 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 
 	startOAuthServ := services.NewStartOAuth(googleOAuthConfig)
 	finishOAuthServ := services.NewFinishOAuth(userDAO, googleOAuthConfig, infraServices.GoogleInfoExtractor, nextIDFunc, cfg)
-	listPostsServ := services.NewListPosts(postDAO, userDAO)
+	listPostsServ := services.NewListPosts(postDAO, userDAO, postLikeDAO, commentDAO)
 	getPostBySlugServ := services.NewGetPostBySlug(postDAO, userDAO, commentDAO, postLikeDAO)
 	createCommentServ := services.NewCreateComment(postDAO, userDAO, commentDAO, nextIDFunc)
 	toggleLikeServ := services.NewToggleLike(postDAO, postLikeDAO, nextIDFunc)

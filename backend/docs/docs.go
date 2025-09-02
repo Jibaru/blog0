@@ -1117,6 +1117,12 @@ const docTemplate = `{
                 "author": {
                     "type": "string"
                 },
+                "comment_count": {
+                    "type": "integer"
+                },
+                "like_count": {
+                    "type": "integer"
+                },
                 "published_at": {
                     "type": "string"
                 },
