@@ -119,6 +119,8 @@ export interface PostItem {
   published_at?: string;
   slug: string;
   title: string;
+  comment_count: number;
+  like_count: number;
 }
 
 export interface ListPostsResp {

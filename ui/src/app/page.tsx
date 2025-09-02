@@ -2,7 +2,7 @@
 
 import { Bookmark, Calendar, Heart, LogIn, MessageCircle, Share, User } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import LoginModal from '@/components/auth/LoginModal';
 import UserMenu from '@/components/auth/UserMenu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -15,25 +15,93 @@ const api = new Blog0ApiClient();
 export default function Home() {
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const loadingRef = useRef(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const lastPostRef = useRef<HTMLDivElement>(null);
 
   const { isAuthenticated } = useAuthStore();
 
-  useEffect(() => {
-    async function fetchPosts() {
-      try {
-        const response = await api.listPosts({ page: 1, per_page: 20 });
-        setPosts(response.items);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch posts');
-      } finally {
-        setLoading(false);
+  const fetchPosts = async (page: number, append = false) => {
+    try {
+      if (page === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
       }
+
+      const response = await api.listPosts({ page, per_page: 5 });
+      
+      if (append) {
+        setPosts(prev => [...prev, ...response.items]);
+      } else {
+        setPosts(response.items);
+      }
+
+      // Check if there are more posts to load
+      const totalPages = Math.ceil(response.total / 5);
+      setHasMore(page < totalPages);
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch posts');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMore = useCallback(() => {
+    if (!loadingRef.current && hasMore && !loadingMore) {
+      loadingRef.current = true;
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      fetchPosts(nextPage, true).finally(() => {
+        loadingRef.current = false;
+      });
+    }
+  }, [hasMore, loadingMore, currentPage]);
+
+  useEffect(() => {
+    fetchPosts(1);
+  }, []);
+
+  // Set up intersection observer when posts change
+  useEffect(() => {
+    if (!lastPostRef.current || !hasMore) return;
+
+    // Clean up previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
     }
 
-    fetchPosts();
-  }, []);
+    // Create new observer
+    observerRef.current = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMore && !loadingMore && !loadingRef.current) {
+          console.log('Last post is visible, loading more posts...');
+          loadMore();
+        }
+      },
+      {
+        rootMargin: '200px',
+        threshold: 0.1,
+      }
+    );
+
+    // Observe the last post
+    observerRef.current.observe(lastPostRef.current);
+
+    // Cleanup
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [posts, hasMore, loadingMore, loadMore]);
 
   if (loading) {
     return (
@@ -93,9 +161,14 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="space-y-0">
-            {posts.map((post) => (
-              <div key={post.slug} className="post-item relative">
+          <>
+            <div className="space-y-0">
+              {posts.map((post, index) => (
+                <div 
+                  key={post.slug} 
+                  ref={index === posts.length - 1 ? lastPostRef : null}
+                  className="post-item relative"
+                >
                 {/* Background content area */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/20 to-black/80" />
 
@@ -140,11 +213,11 @@ export default function Home() {
                         <div className="flex items-center space-x-4 text-[#AFAFAF] caption-small">
                           <span className="flex items-center">
                             <Heart className="h-3 w-3 mr-1" />
-                            {Math.floor(Math.random() * 1000)} likes
+                            {post.like_count} likes
                           </span>
                           <span className="flex items-center">
                             <MessageCircle className="h-3 w-3 mr-1" />
-                            {Math.floor(Math.random() * 50)} comments
+                            {post.comment_count} comments
                           </span>
                         </div>
                       </div>
@@ -165,7 +238,7 @@ export default function Home() {
                       <Heart className="h-7 w-7" />
                     </Button>
                     <span className="caption-small text-white font-medium">
-                      {Math.floor(Math.random() * 1000)}
+                      {post.like_count}
                     </span>
                   </div>
 
@@ -181,7 +254,7 @@ export default function Home() {
                       </Button>
                     </Link>
                     <span className="caption-small text-white font-medium">
-                      {Math.floor(Math.random() * 50)}
+                      {post.comment_count}
                     </span>
                   </div>
 
@@ -209,8 +282,23 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            {/* Loading more indicator */}
+            {loadingMore && (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-white text-lg">Loading more posts...</div>
+              </div>
+            )}
+
+            {/* End of posts indicator */}
+            {!hasMore && posts.length > 0 && (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-[#AFAFAF] text-sm">You've reached the end!</div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
