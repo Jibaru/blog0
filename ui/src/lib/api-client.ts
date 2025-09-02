@@ -157,12 +157,14 @@ export interface ListPostsParams {
   page?: number;
   per_page?: number;
   order?: string;
+  [key: string]: string | number | boolean | undefined;
 }
 
 export interface ListMyPostsParams {
   page?: number;
   per_page?: number;
   order?: 'ASC' | 'DESC';
+  [key: string]: string | number | boolean | undefined;
 }
 
 export interface ApiClientConfig {
@@ -204,7 +206,7 @@ export class Blog0ApiClient {
     const url = `${this.baseUrl}/api/v1${endpoint}`;
     const headers: Record<string, string> = {
       ...this.defaultHeaders,
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (this.apiToken) {
