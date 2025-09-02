@@ -17,10 +17,8 @@ import UserMenu from '@/components/auth/UserMenu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import Blog0ApiClient, { type GetPostBySlugResp } from '@/lib/api-client';
+import { type GetPostBySlugResp } from '@/lib/api-client';
 import { useAuthStore } from '@/store/authStore';
-
-const api = new Blog0ApiClient();
 
 export default function PostPage() {
   const params = useParams();
@@ -35,14 +33,15 @@ export default function PostPage() {
   const [bookmarked, setBookmarked] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, getApiClient } = useAuthStore();
 
   useEffect(() => {
     if (!slug) return;
 
     async function fetchPost() {
       try {
-        const response = await api.getPostBySlug(slug);
+        const apiClient = getApiClient();
+        const response = await apiClient.getPostBySlug(slug);
         setPost(response);
         setLikesCount(response.likes_count);
       } catch (err) {
@@ -64,7 +63,8 @@ export default function PostPage() {
     }
 
     try {
-      const response = await api.toggleLike(post.slug);
+      const apiClient = getApiClient();
+      const response = await apiClient.toggleLike(post.slug);
       setLiked(response.liked);
       setLikesCount(response.likes_count);
     } catch (err) {
@@ -81,11 +81,13 @@ export default function PostPage() {
     }
 
     try {
+      const apiClient = getApiClient();
+      
       if (bookmarked) {
-        await api.unbookmarkPost(post.slug);
+        await apiClient.unbookmarkPost(post.slug);
         setBookmarked(false);
       } else {
-        await api.bookmarkPost(post.slug);
+        await apiClient.bookmarkPost(post.slug);
         setBookmarked(true);
       }
     } catch (err) {

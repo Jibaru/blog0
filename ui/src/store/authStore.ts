@@ -24,11 +24,10 @@ interface AuthActions {
   clearError: () => void;
   setLoading: (loading: boolean) => void;
   checkAuth: () => Promise<void>;
+  getApiClient: () => Blog0ApiClient;
 }
 
 type AuthStore = AuthState & AuthActions;
-
-const api = new Blog0ApiClient();
 
 export const useAuthStore = create<AuthStore>()(
   persist(
@@ -44,6 +43,7 @@ export const useAuthStore = create<AuthStore>()(
       login: async (provider: string) => {
         try {
           set({ isLoading: true, error: null });
+          const api = new Blog0ApiClient();
 
           // Start OAuth flow
           await api.startOAuth(provider);
@@ -56,9 +56,6 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
-        // Clear API token
-        api.setApiToken('');
-
         // Clear store state
         set({
           user: null,
@@ -70,9 +67,6 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       setToken: (token: string) => {
-        // Set API token
-        api.setApiToken(token);
-
         set({
           token,
           isAuthenticated: true,
@@ -107,9 +101,6 @@ export const useAuthStore = create<AuthStore>()(
         try {
           set({ isLoading: true });
 
-          // Set token in API client
-          api.setApiToken(token);
-
           // Try to fetch user data to verify token
           // For now, we'll just assume the token is valid
           set({
@@ -129,6 +120,17 @@ export const useAuthStore = create<AuthStore>()(
             error: 'Authentication expired',
           });
         }
+      },
+
+      getApiClient: () => {
+        const { token } = get();
+        const api = new Blog0ApiClient();
+        
+        if (token) {
+          api.setApiToken(token);
+        }
+        
+        return api;
       },
     }),
     {

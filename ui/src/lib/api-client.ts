@@ -212,7 +212,7 @@ export class Blog0ApiClient {
     };
 
     if (this.apiToken) {
-      headers.Authorization = `Bearer ${this.apiToken}`;
+      headers.Authorization = `${this.apiToken}`;
     }
 
     const response = await fetch(url, {
@@ -335,4 +335,8 @@ export class Blog0ApiClient {
   }
 }
 
+// Create a shared global instance
+const globalApiClient = new Blog0ApiClient();
+
 export default Blog0ApiClient;
+export { globalApiClient };

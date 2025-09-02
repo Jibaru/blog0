@@ -7,10 +7,8 @@ import LoginModal from '@/components/auth/LoginModal';
 import UserMenu from '@/components/auth/UserMenu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import Blog0ApiClient, { type PostItem } from '@/lib/api-client';
+import { type PostItem } from '@/lib/api-client';
 import { useAuthStore } from '@/store/authStore';
-
-const api = new Blog0ApiClient();
 
 export default function Home() {
   const [posts, setPosts] = useState<PostItem[]>([]);
@@ -23,8 +21,13 @@ export default function Home() {
   const loadingRef = useRef(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastPostRef = useRef<HTMLDivElement>(null);
+  
+  // Track like and bookmark states for each post
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
+  const [postLikeCounts, setPostLikeCounts] = useState<Record<string, number>>({});
 
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, getApiClient } = useAuthStore();
 
   const fetchPosts = async (page: number, append = false) => {
     try {
@@ -34,12 +37,25 @@ export default function Home() {
         setLoadingMore(true);
       }
 
-      const response = await api.listPosts({ page, per_page: 5 });
+      const apiClient = getApiClient();
+      const response = await apiClient.listPosts({ page, per_page: 5 });
       
       if (append) {
         setPosts(prev => [...prev, ...response.items]);
       } else {
         setPosts(response.items);
+      }
+
+      // Initialize like counts for new posts
+      const newLikeCounts: Record<string, number> = {};
+      response.items.forEach(post => {
+        newLikeCounts[post.slug] = post.like_count;
+      });
+      
+      if (append) {
+        setPostLikeCounts(prev => ({ ...prev, ...newLikeCounts }));
+      } else {
+        setPostLikeCounts(newLikeCounts);
       }
 
       // Check if there are more posts to load
@@ -64,6 +80,64 @@ export default function Home() {
       });
     }
   }, [hasMore, loadingMore, currentPage]);
+
+  const handleLike = async (slug: string) => {
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    try {
+      const apiClient = getApiClient();
+      const response = await apiClient.toggleLike(slug);
+      
+      // Update like state and count
+      if (response.liked) {
+        setLikedPosts(prev => new Set([...prev, slug]));
+      } else {
+        setLikedPosts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(slug);
+          return newSet;
+        });
+      }
+      
+      setPostLikeCounts(prev => ({
+        ...prev,
+        [slug]: response.likes_count
+      }));
+      
+    } catch (err) {
+      console.error('Failed to toggle like:', err);
+    }
+  };
+
+  const handleBookmark = async (slug: string) => {
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    try {
+      const apiClient = getApiClient();
+      const isCurrentlyBookmarked = bookmarkedPosts.has(slug);
+      
+      if (isCurrentlyBookmarked) {
+        await apiClient.unbookmarkPost(slug);
+        setBookmarkedPosts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(slug);
+          return newSet;
+        });
+      } else {
+        await apiClient.bookmarkPost(slug);
+        setBookmarkedPosts(prev => new Set([...prev, slug]));
+      }
+      
+    } catch (err) {
+      console.error('Failed to toggle bookmark:', err);
+    }
+  };
 
   useEffect(() => {
     fetchPosts(1);
@@ -213,7 +287,7 @@ export default function Home() {
                         <div className="flex items-center space-x-4 text-[#AFAFAF] caption-small">
                           <span className="flex items-center">
                             <Heart className="h-3 w-3 mr-1" />
-                            {post.like_count} likes
+                            {postLikeCounts[post.slug] ?? post.like_count} likes
                           </span>
                           <span className="flex items-center">
                             <MessageCircle className="h-3 w-3 mr-1" />
@@ -232,13 +306,17 @@ export default function Home() {
                     <Button
                       size="lg"
                       variant="ghost"
-                      className="w-12 h-12 rounded-full p-0 text-white hover:text-[#FE2C55] hover:bg-white/10 transition-smooth hover:scale-110"
-                      onClick={() => (isAuthenticated ? null : setShowLoginModal(true))}
+                      className={`w-12 h-12 rounded-full p-0 transition-smooth hover:scale-110 ${
+                        likedPosts.has(post.slug)
+                          ? 'text-[#FE2C55] glow-accent'
+                          : 'text-white hover:text-[#FE2C55] hover:bg-white/10'
+                      }`}
+                      onClick={() => handleLike(post.slug)}
                     >
-                      <Heart className="h-7 w-7" />
+                      <Heart className={`h-7 w-7 ${likedPosts.has(post.slug) ? 'fill-current' : ''}`} />
                     </Button>
                     <span className="caption-small text-white font-medium">
-                      {post.like_count}
+                      {postLikeCounts[post.slug] ?? post.like_count}
                     </span>
                   </div>
 
@@ -263,10 +341,14 @@ export default function Home() {
                     <Button
                       size="lg"
                       variant="ghost"
-                      className="w-12 h-12 rounded-full p-0 text-white hover:text-[#FE2C55] hover:bg-white/10 transition-smooth hover:scale-110"
-                      onClick={() => (isAuthenticated ? null : setShowLoginModal(true))}
+                      className={`w-12 h-12 rounded-full p-0 transition-smooth hover:scale-110 ${
+                        bookmarkedPosts.has(post.slug)
+                          ? 'text-[#25F4EE] glow-cyan'
+                          : 'text-white hover:text-[#25F4EE] hover:bg-white/10'
+                      }`}
+                      onClick={() => handleBookmark(post.slug)}
                     >
-                      <Bookmark className="h-7 w-7" />
+                      <Bookmark className={`h-7 w-7 ${bookmarkedPosts.has(post.slug) ? 'fill-current' : ''}`} />
                     </Button>
                   </div>
 
