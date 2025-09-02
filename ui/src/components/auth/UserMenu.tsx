@@ -34,17 +34,17 @@ export default function UserMenu() {
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
           {/* Menu */}
-          <Card className="absolute top-full right-0 mt-2 w-48 bg-[#121212] border-white/10 z-50">
+          <Card className="absolute top-full right-0 mt-2 w-48 bg-[#121212] border-white/10 z-50 -translate-x-4">
             <CardContent className="p-2">
               <div className="flex items-center space-x-3 p-2 mb-2">
-                <Avatar className="w-10 h-10 border border-white/20">
+                <Avatar className="w-10 h-10 border border-white/20 flex-shrink-0">
                   <AvatarFallback className="bg-[#FE2C55] text-white font-bold">
                     {user.name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <div className="text-white font-medium text-sm">{user.name}</div>
-                  {user.email && <div className="text-[#AFAFAF] text-xs">{user.email}</div>}
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">{user.name}</div>
+                  {user.email && <div className="text-[#AFAFAF] text-xs truncate">{user.email}</div>}
                 </div>
               </div>
 
