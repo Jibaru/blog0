@@ -7,8 +7,9 @@ import LoginModal from '@/components/auth/LoginModal';
 import UserMenu from '@/components/auth/UserMenu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { type PostItem } from '@/lib/api-client';
+import { type PostItem, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/components/ui/toast';
 
 export default function Home() {
   const [posts, setPosts] = useState<PostItem[]>([]);
@@ -28,6 +29,7 @@ export default function Home() {
   const [postLikeCounts, setPostLikeCounts] = useState<Record<string, number>>({});
 
   const { isAuthenticated, getApiClient } = useAuthStore();
+  const { showToast } = useToast();
 
   const fetchPosts = async (page: number, append = false) => {
     try {
@@ -63,7 +65,9 @@ export default function Home() {
       setHasMore(page < totalPages);
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch posts');
+      const errorMessage = err instanceof ApiError ? err.message : 'Failed to fetch posts';
+      setError(errorMessage);
+      showToast(errorMessage);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -75,7 +79,13 @@ export default function Home() {
       loadingRef.current = true;
       const nextPage = currentPage + 1;
       setCurrentPage(nextPage);
-      fetchPosts(nextPage, true).finally(() => {
+      fetchPosts(nextPage, true).catch((error) => {
+        if (error instanceof ApiError) {
+          showToast(error.message);
+        } else {
+          showToast('Failed to load more posts');
+        }
+      }).finally(() => {
         loadingRef.current = false;
       });
     }
@@ -109,6 +119,11 @@ export default function Home() {
       
     } catch (err) {
       console.error('Failed to toggle like:', err);
+      if (err instanceof ApiError) {
+        showToast(err.message);
+      } else {
+        showToast('Failed to update like');
+      }
     }
   };
 
@@ -136,6 +151,11 @@ export default function Home() {
       
     } catch (err) {
       console.error('Failed to toggle bookmark:', err);
+      if (err instanceof ApiError) {
+        showToast(err.message);
+      } else {
+        showToast('Failed to update bookmark');
+      }
     }
   };
 

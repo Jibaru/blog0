@@ -17,8 +17,9 @@ import UserMenu from '@/components/auth/UserMenu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { type GetPostBySlugResp } from '@/lib/api-client';
+import { type GetPostBySlugResp, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/components/ui/toast';
 
 export default function PostPage() {
   const params = useParams();
@@ -34,6 +35,7 @@ export default function PostPage() {
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const { isAuthenticated, getApiClient } = useAuthStore();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!slug) return;
@@ -45,7 +47,9 @@ export default function PostPage() {
         setPost(response);
         setLikesCount(response.likes_count);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch post');
+        const errorMessage = err instanceof ApiError ? err.message : 'Failed to fetch post';
+        setError(errorMessage);
+        showToast(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -69,6 +73,11 @@ export default function PostPage() {
       setLikesCount(response.likes_count);
     } catch (err) {
       console.error('Failed to toggle like:', err);
+      if (err instanceof ApiError) {
+        showToast(err.message);
+      } else {
+        showToast('Failed to update like');
+      }
     }
   };
 
@@ -92,6 +101,11 @@ export default function PostPage() {
       }
     } catch (err) {
       console.error('Failed to toggle bookmark:', err);
+      if (err instanceof ApiError) {
+        showToast(err.message);
+      } else {
+        showToast('Failed to update bookmark');
+      }
     }
   };
 

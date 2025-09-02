@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/components/ui/toast';
+import { ApiError } from '@/lib/api-client';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -13,6 +15,7 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const { login, isLoading, error, clearError } = useAuthStore();
+  const { showToast } = useToast();
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -26,6 +29,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       // OAuth will redirect, so we don't close the modal here
     } catch (err) {
       console.error('Login failed:', err);
+      if (err instanceof ApiError) {
+        showToast(err.message);
+      } else {
+        showToast('Login failed');
+      }
       setSelectedProvider(null);
     }
   };

@@ -3,12 +3,14 @@
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/components/ui/toast';
 
 export default function AuthCallbackPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setToken, setUser, setLoading } = useAuthStore();
+  const { showToast } = useToast();
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Processing authentication...');
@@ -60,8 +62,10 @@ export default function AuthCallbackPage() {
         }
       } catch (error) {
         console.error('Auth callback error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
         setStatus('error');
-        setMessage(error instanceof Error ? error.message : 'Authentication failed');
+        setMessage(errorMessage);
+        showToast(errorMessage);
 
         // Redirect to home page after showing error
         setTimeout(() => {
