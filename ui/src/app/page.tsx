@@ -419,7 +419,7 @@ export default function Home() {
             {/* End of posts indicator */}
             {!hasMore && posts.length > 0 && (
               <div className="flex items-center justify-center py-8">
-                <div className="text-[#AFAFAF] text-sm">You've reached the end!</div>
+                <div className="text-[#AFAFAF] text-sm">You&apos;ve reached the end!</div>
               </div>
             )}
           </>

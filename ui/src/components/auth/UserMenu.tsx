@@ -1,7 +1,8 @@
 'use client';
 
-import { LogOut, Settings, User } from 'lucide-react';
+import { LogOut, Settings, User, FileText } from 'lucide-react';
 import { useState } from 'react';
+import Link from 'next/link';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -49,6 +50,18 @@ export default function UserMenu() {
               </div>
 
               <div className="space-y-1">
+                <Link href="/my-posts">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-[#AFAFAF] hover:text-white hover:bg-white/10"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    My Posts
+                  </Button>
+                </Link>
+
                 <Button
                   variant="ghost"
                   size="sm"

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import Blog0ApiClient, { type GetProfileResp } from '@/lib/api-client';
+import Blog0ApiClient from '@/lib/api-client';
 
 export interface User {
   id: string;

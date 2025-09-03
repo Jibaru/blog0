@@ -77,7 +77,7 @@ export default function AuthCallbackPage() {
     };
 
     handleCallback();
-  }, [params.provider, searchParams, setToken, setUser, setLoading, router]);
+  }, [params.provider, searchParams, setToken, setUser, setLoading, router, showToast]);
 
   const getStatusColor = () => {
     switch (status) {

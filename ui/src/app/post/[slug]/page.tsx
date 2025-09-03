@@ -79,7 +79,7 @@ export default function PostPage() {
     }
 
     fetchPost();
-  }, [slug]);
+  }, [slug, showToast, getApiClient]);
 
   const handleLike = async () => {
     if (!post) return;
@@ -170,7 +170,7 @@ export default function PostPage() {
           title: post?.title,
           url: window.location.href,
         });
-      } catch (_err) {
+      } catch {
         console.log('Share cancelled');
       }
     } else {
