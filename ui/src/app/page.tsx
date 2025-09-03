@@ -1,6 +1,6 @@
 'use client';
 
-import { Bookmark, Calendar, Heart, LogIn, MessageCircle, Share, User } from 'lucide-react';
+import { Bookmark, Calendar, Heart, LogIn, MessageCircle, Share, User, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import LoginModal from '@/components/auth/LoginModal';
@@ -223,7 +223,20 @@ export default function Home() {
         <h1 className="accent-text text-xl font-bold">Blog0</h1>
 
         {/* Auth section */}
-        <div className="flex items-center">
+        <div className="flex items-center space-x-3">
+          {isAuthenticated && (
+            <Link href="/create">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white hover:text-[#25F4EE] hover:bg-white/10"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create
+              </Button>
+            </Link>
+          )}
+          
           {isAuthenticated ? (
             <UserMenu />
           ) : (

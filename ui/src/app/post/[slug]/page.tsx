@@ -9,8 +9,10 @@ import {
   MessageCircle,
   Share,
   User,
+  Edit3,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import LoginModal from '@/components/auth/LoginModal';
 import UserMenu from '@/components/auth/UserMenu';
@@ -40,6 +42,7 @@ export default function PostPage() {
   const { 
     isAuthenticated, 
     getApiClient, 
+    user,
     isPostLiked: isLiked, 
     isPostBookmarked: isBookmarked, 
     updatePostLike, 
@@ -216,7 +219,21 @@ export default function PostPage() {
         </div>
 
         {/* Auth section */}
-        <div className="flex items-center">
+        <div className="flex items-center space-x-3">
+          {/* Edit button - only show to post author */}
+          {isAuthenticated && user && post && user.id === post.author.id && (
+            <Link href={`/edit/${post.slug}`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white hover:text-[#25F4EE] hover:bg-white/10"
+              >
+                <Edit3 className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            </Link>
+          )}
+          
           {isAuthenticated ? (
             <UserMenu />
           ) : (
