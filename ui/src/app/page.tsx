@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { type PostItem, ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/components/ui/toast';
+import FollowButton from '@/components/FollowButton';
 
 export default function Home() {
   const [posts, setPosts] = useState<PostItem[]>([]);
@@ -269,16 +270,18 @@ export default function Home() {
                 {/* Main content */}
                 <div className="relative z-10 w-full max-w-sm mx-auto px-4 h-full flex flex-col justify-between">
                   {/* Author info at top */}
-                  <div className="pt-20 flex items-center space-x-3">
-                    <Avatar className="w-12 h-12 border-2 border-white/20">
-                      <AvatarFallback className="bg-[#FE2C55] text-white font-bold">
-                        {post.author.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="text-white font-semibold">{post.author}</div>
-                      <div className="text-[#AFAFAF] text-sm flex items-center">
-                        <User className="h-3 w-3 mr-1" />@{post.author}
+                  <div className="pt-20 flex items-center justify-between pr-16">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="w-12 h-12 border-2 border-white/20">
+                        <AvatarFallback className="bg-[#FE2C55] text-white font-bold">
+                          {post.author.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="text-white font-semibold">{post.author}</div>
+                        <div className="text-[#AFAFAF] text-sm flex items-center">
+                          <User className="h-3 w-3 mr-1" />@{post.author}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -371,6 +374,18 @@ export default function Home() {
                       <Bookmark className={`h-7 w-7 ${bookmarkedPosts.has(post.slug) ? 'fill-current' : ''}`} />
                     </Button>
                   </div>
+
+                  {/* Follow button */}
+                  {post.author_id && (
+                    <div className="flex flex-col items-center space-y-2">
+                      <FollowButton
+                        authorId={post.author_id}
+                        authorName={post.author}
+                        onLoginRequired={() => setShowLoginModal(true)}
+                        variant="icon"
+                      />
+                    </div>
+                  )}
 
                   {/* Share button */}
                   <div className="flex flex-col items-center space-y-2">

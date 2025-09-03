@@ -22,6 +22,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/components/ui/toast';
 import CommentForm from '@/components/CommentForm';
 import CommentItem from '@/components/CommentItem';
+import FollowButton from '@/components/FollowButton';
 
 export default function PostPage() {
   const params = useParams();
@@ -221,24 +222,32 @@ export default function PostPage() {
           {/* Content area with generous padding */}
           <div className="px-6 pb-32">
             {/* Author section */}
-            <div className="pt-6 pb-6 flex items-center space-x-4">
-              <Avatar className="w-16 h-16 border-2 border-white/20">
-                <AvatarFallback className="bg-[#FE2C55] text-white font-bold text-xl">
-                  {post.author.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="space-y-1">
-                <div className="text-white font-bold text-lg">{post.author.name}</div>
-                <div className="text-[#AFAFAF] caption-small flex items-center">
-                  <User className="h-3 w-3 mr-1" />@{post.author.name}
-                </div>
-                {post.published_at && (
+            <div className="pt-6 pb-6 flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Avatar className="w-16 h-16 border-2 border-white/20">
+                  <AvatarFallback className="bg-[#FE2C55] text-white font-bold text-xl">
+                    {post.author.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <div className="text-white font-bold text-lg">{post.author.name}</div>
                   <div className="text-[#AFAFAF] caption-small flex items-center">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {new Date(post.published_at).toLocaleString()}
+                    <User className="h-3 w-3 mr-1" />@{post.author.name}
                   </div>
-                )}
+                  {post.published_at && (
+                    <div className="text-[#AFAFAF] caption-small flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {new Date(post.published_at).toLocaleString()}
+                    </div>
+                  )}
+                </div>
               </div>
+              <FollowButton
+                authorId={post.author.id}
+                authorName={post.author.name}
+                onLoginRequired={() => setShowLoginModal(true)}
+                variant="compact"
+              />
             </div>
 
             {/* Post title */}
