@@ -55,6 +55,7 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 	getAuthorInfoServ := services.NewGetAuthorInfo(userDAO, postDAO, postLikeDAO)
 	followUserServ := services.NewFollowUser(userDAO, followDAO, nextIDFunc)
 	unfollowUserServ := services.NewUnfollowUser(userDAO, followDAO)
+	getProfileServ := services.NewGetProfile(userDAO, followDAO, bookmarkDAO, postLikeDAO, postDAO)
 
 	api := router.Group("/api/v1")
 	{
@@ -68,6 +69,7 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 		api.Use(middlewares.HasAuthorization(cfg.JWTSecret))
 		{
 			// User-specific endpoints (my content)
+			api.GET("/me/profile", handlers.GetProfile(getProfileServ))
 			api.POST("/me/posts", handlers.CreatePost(createPostServ))
 			api.PUT("/me/posts/:slug", handlers.UpdatePost(updatePostServ))
 			api.DELETE("/me/posts/:slug", handlers.DeletePost(deletePostServ))

@@ -144,6 +144,22 @@ export interface UnfollowUserResp {
   following: boolean;
 }
 
+export interface ProfilePost {
+  id: string;
+  title: string;
+}
+
+export interface ProfileUser {
+  id: string;
+  username: string;
+}
+
+export interface GetProfileResp {
+  bookmarks: ProfilePost[];
+  following: ProfileUser[];
+  liked_posts: ProfilePost[];
+}
+
 export interface UpdatePostResp {
   author_id: string;
   created_at: string;
@@ -332,6 +348,10 @@ export class Blog0ApiClient {
     return this.request<UnfollowUserResp>(`/users/${authorId}/follow`, {
       method: 'DELETE',
     });
+  }
+
+  async getProfile(): Promise<GetProfileResp> {
+    return this.request<GetProfileResp>('/me/profile');
   }
 }
 

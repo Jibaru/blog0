@@ -327,6 +327,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/me/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get user's following, bookmarks, and liked posts (requires authentication)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get user profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/services.GetProfileResp"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResp"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResp"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/posts": {
             "get": {
                 "description": "List all posts with pagination and ordering",
@@ -1045,6 +1082,29 @@ const docTemplate = `{
                 }
             }
         },
+        "services.GetProfileResp": {
+            "type": "object",
+            "properties": {
+                "bookmarks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.ProfilePost"
+                    }
+                },
+                "following": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.ProfileUser"
+                    }
+                },
+                "liked_posts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.ProfilePost"
+                    }
+                }
+            }
+        },
         "services.ListMyPostsResp": {
             "type": "object",
             "properties": {
@@ -1130,6 +1190,28 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.ProfilePost": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.ProfileUser": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -1232,6 +1314,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "This is the blog0 API.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {
