@@ -217,6 +217,8 @@ definitions:
     properties:
       author:
         type: string
+      author_id:
+        type: string
       comment_count:
         type: integer
       like_count:

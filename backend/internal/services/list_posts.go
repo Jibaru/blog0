@@ -28,6 +28,7 @@ type ListPostsReq struct {
 type PostItem struct {
 	Title        string    `json:"title"`
 	Author       string    `json:"author"`
+	AuthorID     string    `json:"author_id"`
 	PublishedAt  time.Time `json:"published_at"`
 	Slug         string    `json:"slug"`
 	LikeCount    int       `json:"like_count"`
@@ -120,6 +121,7 @@ func (s *ListPosts) Exec(ctx context.Context, req *ListPostsReq) (*ListPostsResp
 		items = append(items, PostItem{
 			Title:        post.Title,
 			Author:       author.Username,
+			AuthorID:     author.ID,
 			PublishedAt:  *post.PublishedAt,
 			Slug:         post.Slug,
 			LikeCount:    likeCounts[post.ID],

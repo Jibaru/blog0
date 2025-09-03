@@ -1177,6 +1177,9 @@ const docTemplate = `{
                 "author": {
                     "type": "string"
                 },
+                "author_id": {
+                    "type": "string"
+                },
                 "comment_count": {
                     "type": "integer"
                 },
