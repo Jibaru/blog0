@@ -17,9 +17,11 @@ import UserMenu from '@/components/auth/UserMenu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { type GetPostBySlugResp, ApiError } from '@/lib/api-client';
+import { type GetPostBySlugResp, ApiError, type CommentInfo } from '@/lib/api-client';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/components/ui/toast';
+import CommentForm from '@/components/CommentForm';
+import CommentItem from '@/components/CommentItem';
 
 export default function PostPage() {
   const params = useParams();
@@ -33,6 +35,8 @@ export default function PostPage() {
   const [likesCount, setLikesCount] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [comments, setComments] = useState<CommentInfo[]>([]);
+  const [showCommentForm, setShowCommentForm] = useState(false);
 
   const { isAuthenticated, getApiClient } = useAuthStore();
   const { showToast } = useToast();
@@ -46,6 +50,7 @@ export default function PostPage() {
         const response = await apiClient.getPostBySlug(slug);
         setPost(response);
         setLikesCount(response.likes_count);
+        setComments(response.comments);
       } catch (err) {
         const errorMessage = err instanceof ApiError ? err.message : 'Failed to fetch post';
         setError(errorMessage);
@@ -107,6 +112,34 @@ export default function PostPage() {
         showToast('Failed to update bookmark');
       }
     }
+  };
+
+  const handleCommentAdded = (newComment: CommentInfo) => {
+    setComments(prev => [...prev, newComment]);
+    if (post) {
+      setPost({ ...post, comments: [...post.comments, newComment] });
+    }
+  };
+
+  const handleReplyAdded = (reply: CommentInfo) => {
+    setComments(prev => [...prev, reply]);
+    if (post) {
+      setPost({ ...post, comments: [...post.comments, reply] });
+    }
+  };
+
+  const handleCommentButtonClick = () => {
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+    setShowCommentForm(!showCommentForm);
+  };
+
+  // Group comments by parent_id for nested display
+  const topLevelComments = comments.filter(comment => !comment.parent_id);
+  const getRepliesForComment = (commentId: string) => {
+    return comments.filter(comment => comment.parent_id === commentId);
   };
 
   const handleShare = async () => {
@@ -245,42 +278,68 @@ export default function PostPage() {
               </div>
             </div>
 
-            {/* Comments section */}
-            {post.comments.length > 0 && (
-              <div className="space-y-6">
-                <Separator className="bg-[#121212]" />
-
-                <div className="space-y-1">
-                  <h3 className="text-white font-bold text-lg mb-4">Comments</h3>
-                  <div className="text-[#AFAFAF] caption-small mb-6">
-                    {post.comments.length} comment{post.comments.length !== 1 ? 's' : ''}
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  {post.comments.map((comment) => (
-                    <div key={comment.id} className="flex items-start space-x-3">
-                      <Avatar className="w-10 h-10 border border-white/10 mt-1">
-                        <AvatarFallback className="bg-[#121212] text-[#AFAFAF] text-sm">
-                          {comment.author.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 space-y-2">
-                        <div>
-                          <span className="text-white font-medium text-sm mr-2">
-                            {comment.author.name}
-                          </span>
-                          <span className="text-[#AFAFAF] caption-small">
-                            {new Date(comment.created_at).toLocaleString()}
-                          </span>
-                        </div>
-                        <p className="body-medium text-white leading-relaxed">{comment.body}</p>
-                      </div>
-                    </div>
-                  ))}
+            {/* Comment form */}
+            <div className="space-y-6">
+              <Separator className="bg-[#121212]" />
+              
+              <div className="space-y-1">
+                <h3 className="text-white font-bold text-lg mb-4">Comments</h3>
+                <div className="text-[#AFAFAF] caption-small mb-6">
+                  {comments.length} comment{comments.length !== 1 ? 's' : ''}
                 </div>
               </div>
-            )}
+
+              {isAuthenticated && (
+                <div className="space-y-4">
+                  {!showCommentForm ? (
+                    <Button
+                      onClick={() => setShowCommentForm(true)}
+                      variant="outline"
+                      className="w-full bg-transparent border-white/10 text-[#AFAFAF] hover:text-white hover:bg-white/5 justify-start"
+                    >
+                      Add a comment...
+                    </Button>
+                  ) : (
+                    <CommentForm
+                      postSlug={post.slug}
+                      onCommentAdded={handleCommentAdded}
+                      onCancel={() => setShowCommentForm(false)}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Comments section */}
+              {comments.length > 0 && (
+                <div className="space-y-6">
+                  {topLevelComments.map((comment) => {
+                    const replies = getRepliesForComment(comment.id);
+                    return (
+                      <div key={comment.id} className="space-y-4">
+                        <CommentItem
+                          comment={comment}
+                          postSlug={post.slug}
+                          onReplyAdded={handleReplyAdded}
+                        />
+                        {replies.length > 0 && (
+                          <div className="space-y-4">
+                            {replies.map((reply) => (
+                              <CommentItem
+                                key={reply.id}
+                                comment={reply}
+                                postSlug={post.slug}
+                                onReplyAdded={handleReplyAdded}
+                                isReply
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Fixed right sidebar with action buttons */}
@@ -308,10 +367,11 @@ export default function PostPage() {
                 size="lg"
                 variant="ghost"
                 className="w-14 h-14 rounded-full p-0 text-white hover:text-[#25F4EE] hover:bg-white/10 transition-smooth hover:scale-110"
+                onClick={handleCommentButtonClick}
               >
                 <MessageCircle className="h-8 w-8" />
               </Button>
-              <span className="caption-small text-white font-bold">{post.comments.length}</span>
+              <span className="caption-small text-white font-bold">{comments.length}</span>
             </div>
 
             {/* Bookmark button */}
