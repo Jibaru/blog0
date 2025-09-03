@@ -29,7 +29,7 @@ export default function FollowButton({
   className = '',
 }: FollowButtonProps) {
   const [following, setFollowing] = useState(initialFollowing);
-  const [followersCount, setFollowersCount] = useState(initialFollowersCount);
+  const [, setFollowersCount] = useState(initialFollowersCount);
   const [isLoading, setIsLoading] = useState(false);
   const { isAuthenticated, getApiClient, user, isUserFollowed, updateUserFollow } = useAuthStore();
   
