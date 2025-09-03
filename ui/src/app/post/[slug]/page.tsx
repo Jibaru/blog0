@@ -25,6 +25,9 @@ import { useToast } from '@/components/ui/toast';
 import CommentForm from '@/components/CommentForm';
 import CommentItem from '@/components/CommentItem';
 import FollowButton from '@/components/FollowButton';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
 
 export default function PostPage() {
   const params = useParams();
@@ -298,8 +301,97 @@ export default function PostPage() {
 
             {/* Post content */}
             <div className="pb-8">
-              <div className="body-medium text-white whitespace-pre-wrap leading-relaxed">
-                {post.raw_markdown}
+              <div className="body-medium text-white leading-relaxed prose prose-invert prose-blog0 max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeHighlight]}
+                  components={{
+                    h1: ({ ...props }) => (
+                      <h1 className="text-2xl font-bold text-white mb-4 mt-6" {...props} />
+                    ),
+                    h2: ({ ...props }) => (
+                      <h2 className="text-xl font-bold text-white mb-3 mt-5" {...props} />
+                    ),
+                    h3: ({ ...props }) => (
+                      <h3 className="text-lg font-semibold text-white mb-2 mt-4" {...props} />
+                    ),
+                    p: ({ ...props }) => (
+                      <p className="text-white mb-4 leading-relaxed" {...props} />
+                    ),
+                    a: ({ ...props }) => (
+                      <a 
+                        className="text-[#25F4EE] hover:text-[#FE2C55] transition-colors underline" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        {...props} 
+                      />
+                    ),
+                    code: ({ className, children, ...props }: { className?: string; children?: React.ReactNode; inline?: boolean }) => {
+                      const isInline = !className?.includes('language-');
+                      return isInline ? (
+                        <code 
+                          className="bg-white/10 text-[#25F4EE] px-1.5 py-0.5 rounded text-sm font-mono" 
+                          {...props} 
+                        >
+                          {children}
+                        </code>
+                      ) : (
+                        <code 
+                          className="block bg-[#121212] text-white p-4 rounded-lg text-sm font-mono overflow-x-auto" 
+                          {...props} 
+                        >
+                          {children}
+                        </code>
+                      )
+                    },
+                    pre: ({ ...props }) => (
+                      <pre 
+                        className="bg-[#121212] border border-white/10 rounded-lg p-4 overflow-x-auto mb-4" 
+                        {...props} 
+                      />
+                    ),
+                    blockquote: ({ ...props }) => (
+                      <blockquote 
+                        className="border-l-4 border-[#FE2C55] pl-4 py-2 my-4 text-[#AFAFAF] italic" 
+                        {...props} 
+                      />
+                    ),
+                    ul: ({ ...props }) => (
+                      <ul className="list-disc list-inside text-white mb-4 space-y-1" {...props} />
+                    ),
+                    ol: ({ ...props }) => (
+                      <ol className="list-decimal list-inside text-white mb-4 space-y-1" {...props} />
+                    ),
+                    li: ({ ...props }) => (
+                      <li className="text-white" {...props} />
+                    ),
+                    table: ({ ...props }) => (
+                      <div className="overflow-x-auto mb-4">
+                        <table className="w-full border border-white/10 rounded-lg" {...props} />
+                      </div>
+                    ),
+                    thead: ({ ...props }) => (
+                      <thead className="bg-white/5" {...props} />
+                    ),
+                    th: ({ ...props }) => (
+                      <th className="border border-white/10 px-4 py-2 text-left text-white font-semibold" {...props} />
+                    ),
+                    td: ({ ...props }) => (
+                      <td className="border border-white/10 px-4 py-2 text-white" {...props} />
+                    ),
+                    hr: ({ ...props }) => (
+                      <hr className="border-white/10 my-6" {...props} />
+                    ),
+                    strong: ({ ...props }) => (
+                      <strong className="font-bold text-white" {...props} />
+                    ),
+                    em: ({ ...props }) => (
+                      <em className="italic text-white" {...props} />
+                    ),
+                  }}
+                >
+                  {post.raw_markdown}
+                </ReactMarkdown>
               </div>
             </div>
 
