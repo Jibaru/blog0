@@ -116,6 +116,7 @@ export interface ListMyPostsResp {
 
 export interface PostItem {
   author: string;
+  author_id: string;
   published_at?: string;
   slug: string;
   title: string;
