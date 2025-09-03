@@ -35,12 +35,12 @@ func (s *UnfollowUser) Exec(ctx context.Context, req *UnfollowUserReq) (*Unfollo
 		return nil, fmt.Errorf("author not found: %w", err)
 	}
 
-	follow, err := s.followDAO.FindByComposite(ctx, req.UserID, req.AuthorID)
+	follow, err := s.followDAO.FindOne(ctx, "follower_id = $1 AND followee_id = $2", "", req.UserID, req.AuthorID)
 	if err != nil {
 		return nil, fmt.Errorf("follow relationship not found: %w", err)
 	}
 
-	err = s.followDAO.DeleteByComposite(ctx, follow.FollowerID, follow.FolloweeID)
+	err = s.followDAO.DeleteByPk(ctx, follow.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to delete follow: %w", err)
 	}

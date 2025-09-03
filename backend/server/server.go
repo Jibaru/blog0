@@ -36,6 +36,7 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 	commentDAO := postgres.NewCommentDAO(db)
 	postLikeDAO := postgres.NewPostLikeDAO(db)
 	bookmarkDAO := postgres.NewBookmarkDAO(db)
+	followDAO := postgres.NewFollowDAO(db)
 
 	nextIDFunc := uuid.NewString
 
@@ -52,6 +53,8 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 	deletePostServ := services.NewDeletePost(postDAO)
 	listMyPostsServ := services.NewListMyPosts(postDAO, userDAO)
 	getAuthorInfoServ := services.NewGetAuthorInfo(userDAO, postDAO, postLikeDAO)
+	followUserServ := services.NewFollowUser(userDAO, followDAO, nextIDFunc)
+	unfollowUserServ := services.NewUnfollowUser(userDAO, followDAO)
 
 	api := router.Group("/api/v1")
 	{
@@ -69,12 +72,16 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 			api.PUT("/me/posts/:slug", handlers.UpdatePost(updatePostServ))
 			api.DELETE("/me/posts/:slug", handlers.DeletePost(deletePostServ))
 			api.GET("/me/posts", handlers.ListMyPosts(listMyPostsServ))
-			
+
 			// Post interactions
 			api.POST("/posts/:slug/comments", handlers.CreateComment(createCommentServ))
 			api.POST("/posts/:slug/likes", handlers.ToggleLike(toggleLikeServ))
 			api.POST("/posts/:slug/bookmarks", handlers.BookmarkPost(bookmarkPostServ))
 			api.DELETE("/posts/:slug/bookmarks", handlers.UnbookmarkPost(unbookmarkPostServ))
+
+			// User interactions
+			api.POST("/users/:author_id/follow", handlers.FollowUser(followUserServ))
+			api.DELETE("/users/:author_id/follow", handlers.UnfollowUser(unfollowUserServ))
 		}
 	}
 

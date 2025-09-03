@@ -18,27 +18,7 @@ INSERT INTO bookmarks (id, user_id, post_id, created_at) VALUES
 ('01936d7d-4f8a-7dd0-9f3b-b4041142434445', '01936d7d-4f8a-7dd0-9f3b-5f6a7b8c9d0e', '01936d7d-4f8a-7dd0-9f3b-4041142434445', NOW() - INTERVAL '11 days'),
 ('01936d7d-4f8a-7dd0-9f3b-b5051152535455', '01936d7d-4f8a-7dd0-9f3b-1c2e3a4b5c6d', '01936d7d-4f8a-7dd0-9f3b-5051152535455', NOW() - INTERVAL '12 days');
 
--- Add some follows
-INSERT INTO follows (follower_id, followee_id, created_at) VALUES
-('01936d7d-4f8a-7dd0-9f3b-1c2e3a4b5c6d', '01936d7d-4f8a-7dd0-9f3b-2c3d4e5f6a7b', NOW() - INTERVAL '15 days'),
-('01936d7d-4f8a-7dd0-9f3b-2c3d4e5f6a7b', '01936d7d-4f8a-7dd0-9f3b-3d4e5f6a7b8c', NOW() - INTERVAL '14 days'),
-('01936d7d-4f8a-7dd0-9f3b-3d4e5f6a7b8c', '01936d7d-4f8a-7dd0-9f3b-4e5f6a7b8c9d', NOW() - INTERVAL '13 days'),
-('01936d7d-4f8a-7dd0-9f3b-4e5f6a7b8c9d', '01936d7d-4f8a-7dd0-9f3b-5f6a7b8c9d0e', NOW() - INTERVAL '12 days'),
-('01936d7d-4f8a-7dd0-9f3b-5f6a7b8c9d0e', '01936d7d-4f8a-7dd0-9f3b-1c2e3a4b5c6d', NOW() - INTERVAL '11 days'),
-('01936d7d-4f8a-7dd0-9f3b-2c3d4e5f6a7b', '01936d7d-4f8a-7dd0-9f3b-1c2e3a4b5c6d', NOW() - INTERVAL '10 days'),
-('01936d7d-4f8a-7dd0-9f3b-3d4e5f6a7b8c', '01936d7d-4f8a-7dd0-9f3b-2c3d4e5f6a7b', NOW() - INTERVAL '9 days');
-
 -- +goose Down
-DELETE FROM follows WHERE (follower_id, followee_id) IN (
-  ('01936d7d-4f8a-7dd0-9f3b-1c2e3a4b5c6d', '01936d7d-4f8a-7dd0-9f3b-2c3d4e5f6a7b'),
-  ('01936d7d-4f8a-7dd0-9f3b-2c3d4e5f6a7b', '01936d7d-4f8a-7dd0-9f3b-3d4e5f6a7b8c'),
-  ('01936d7d-4f8a-7dd0-9f3b-3d4e5f6a7b8c', '01936d7d-4f8a-7dd0-9f3b-4e5f6a7b8c9d'),
-  ('01936d7d-4f8a-7dd0-9f3b-4e5f6a7b8c9d', '01936d7d-4f8a-7dd0-9f3b-5f6a7b8c9d0e'),
-  ('01936d7d-4f8a-7dd0-9f3b-5f6a7b8c9d0e', '01936d7d-4f8a-7dd0-9f3b-1c2e3a4b5c6d'),
-  ('01936d7d-4f8a-7dd0-9f3b-2c3d4e5f6a7b', '01936d7d-4f8a-7dd0-9f3b-1c2e3a4b5c6d'),
-  ('01936d7d-4f8a-7dd0-9f3b-3d4e5f6a7b8c', '01936d7d-4f8a-7dd0-9f3b-2c3d4e5f6a7b')
-);
-
 DELETE FROM bookmarks WHERE id IN (
   '01936d7d-4f8a-7dd0-9f3b-b101112131415',
   '01936d7d-4f8a-7dd0-9f3b-b2021122232425',

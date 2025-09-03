@@ -11,6 +11,7 @@ import (
 type FollowUser struct {
 	userDAO   dao.UserDAO
 	followDAO dao.FollowDAO
+	nextID    domain.NextID
 }
 
 type FollowUserReq struct {
@@ -23,10 +24,11 @@ type FollowUserResp struct {
 	FollowersCount int  `json:"followers_count"`
 }
 
-func NewFollowUser(userDAO dao.UserDAO, followDAO dao.FollowDAO) *FollowUser {
+func NewFollowUser(userDAO dao.UserDAO, followDAO dao.FollowDAO, nextID domain.NextID) *FollowUser {
 	return &FollowUser{
 		userDAO:   userDAO,
 		followDAO: followDAO,
+		nextID:    nextID,
 	}
 }
 
@@ -41,12 +43,12 @@ func (s *FollowUser) Exec(ctx context.Context, req *FollowUserReq) (*FollowUserR
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
 
-	existingFollow, err := s.followDAO.FindByComposite(ctx, req.UserID, req.AuthorID)
+	existingFollow, err := s.followDAO.FindOne(ctx, "follower_id = $1 AND followee_id = $2", "", req.UserID, req.AuthorID)
 	if err == nil && existingFollow != nil {
 		return nil, fmt.Errorf("user is already following this author")
 	}
 
-	newFollow, err := domain.NewFollow(req.UserID, req.AuthorID)
+	newFollow, err := domain.NewFollow(s.nextID(), req.UserID, req.AuthorID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create follow: %w", err)
 	}

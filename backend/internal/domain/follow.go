@@ -6,12 +6,17 @@ import (
 )
 
 type Follow struct {
+	ID         string    `sql:"id,primary"`
 	FollowerID string    `sql:"follower_id"`
 	FolloweeID string    `sql:"followee_id"`
 	CreatedAt  time.Time `sql:"created_at"`
 }
 
-func NewFollow(followerID string, followeeID string) (*Follow, error) {
+func NewFollow(id string, followerID string, followeeID string) (*Follow, error) {
+	if id == "" {
+		return nil, fmt.Errorf("ID cannot be empty")
+	}
+
 	if followerID == "" {
 		return nil, fmt.Errorf("follower ID cannot be empty")
 	}
@@ -25,6 +30,7 @@ func NewFollow(followerID string, followeeID string) (*Follow, error) {
 	}
 
 	return &Follow{
+		ID:         id,
 		FollowerID: followerID,
 		FolloweeID: followeeID,
 		CreatedAt:  time.Now(),
