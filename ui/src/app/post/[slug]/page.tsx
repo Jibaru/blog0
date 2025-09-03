@@ -32,14 +32,28 @@ export default function PostPage() {
   const [post, setPost] = useState<GetPostBySlugResp | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
-  const [bookmarked, setBookmarked] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [comments, setComments] = useState<CommentInfo[]>([]);
   const [showCommentForm, setShowCommentForm] = useState(false);
 
-  const { isAuthenticated, getApiClient } = useAuthStore();
+  const { 
+    isAuthenticated, 
+    getApiClient, 
+    isPostLiked: isLiked, 
+    isPostBookmarked: isBookmarked, 
+    updatePostLike, 
+    updatePostBookmark 
+  } = useAuthStore();
+
+  // Helper functions to check profile state for current post
+  const isPostLikedCurrent = () => {
+    return post ? isLiked(post.slug) : false;
+  };
+
+  const isPostBookmarkedCurrent = () => {
+    return post ? isBookmarked(post.slug) : false;
+  };
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -75,7 +89,9 @@ export default function PostPage() {
     try {
       const apiClient = getApiClient();
       const response = await apiClient.toggleLike(post.slug);
-      setLiked(response.liked);
+      
+      // Update profile state
+      updatePostLike(post.slug, response.liked);
       setLikesCount(response.likes_count);
     } catch (err) {
       console.error('Failed to toggle like:', err);
@@ -97,13 +113,14 @@ export default function PostPage() {
 
     try {
       const apiClient = getApiClient();
+      const currentlyBookmarked = isPostBookmarkedCurrent();
       
-      if (bookmarked) {
+      if (currentlyBookmarked) {
         await apiClient.unbookmarkPost(post.slug);
-        setBookmarked(false);
+        updatePostBookmark(post.slug, false);
       } else {
         await apiClient.bookmarkPost(post.slug);
-        setBookmarked(true);
+        updatePostBookmark(post.slug, true);
       }
     } catch (err) {
       console.error('Failed to toggle bookmark:', err);
@@ -359,13 +376,13 @@ export default function PostPage() {
                 size="lg"
                 variant="ghost"
                 className={`w-14 h-14 rounded-full p-0 transition-smooth hover:scale-110 ${
-                  liked
+                  isPostLikedCurrent()
                     ? 'text-[#FE2C55] glow-accent'
                     : 'text-white hover:text-[#FE2C55] hover:bg-white/10'
                 }`}
                 onClick={handleLike}
               >
-                <Heart className={`h-8 w-8 ${liked ? 'fill-current' : ''}`} />
+                <Heart className={`h-8 w-8 ${isPostLikedCurrent() ? 'fill-current' : ''}`} />
               </Button>
               <span className="caption-small text-white font-bold">{likesCount}</span>
             </div>
@@ -389,13 +406,13 @@ export default function PostPage() {
                 size="lg"
                 variant="ghost"
                 className={`w-14 h-14 rounded-full p-0 transition-smooth hover:scale-110 ${
-                  bookmarked
+                  isPostBookmarkedCurrent()
                     ? 'text-[#25F4EE] glow-cyan'
                     : 'text-white hover:text-[#25F4EE] hover:bg-white/10'
                 }`}
                 onClick={handleBookmark}
               >
-                <Bookmark className={`h-8 w-8 ${bookmarked ? 'fill-current' : ''}`} />
+                <Bookmark className={`h-8 w-8 ${isPostBookmarkedCurrent() ? 'fill-current' : ''}`} />
               </Button>
             </div>
 

@@ -24,12 +24,17 @@ export default function Home() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastPostRef = useRef<HTMLDivElement>(null);
   
-  // Track like and bookmark states for each post
-  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
+  // Track local like counts for posts
   const [postLikeCounts, setPostLikeCounts] = useState<Record<string, number>>({});
 
-  const { isAuthenticated, getApiClient } = useAuthStore();
+  const { 
+    isAuthenticated, 
+    getApiClient, 
+    isPostLiked, 
+    isPostBookmarked, 
+    updatePostLike, 
+    updatePostBookmark 
+  } = useAuthStore();
   const { showToast } = useToast();
 
   const fetchPosts = async (page: number, append = false) => {
@@ -102,17 +107,10 @@ export default function Home() {
       const apiClient = getApiClient();
       const response = await apiClient.toggleLike(slug);
       
-      // Update like state and count
-      if (response.liked) {
-        setLikedPosts(prev => new Set([...prev, slug]));
-      } else {
-        setLikedPosts(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(slug);
-          return newSet;
-        });
-      }
+      // Update profile state
+      updatePostLike(slug, response.liked);
       
+      // Update like count
       setPostLikeCounts(prev => ({
         ...prev,
         [slug]: response.likes_count
@@ -136,18 +134,14 @@ export default function Home() {
 
     try {
       const apiClient = getApiClient();
-      const isCurrentlyBookmarked = bookmarkedPosts.has(slug);
+      const isCurrentlyBookmarked = isPostBookmarked(slug);
       
       if (isCurrentlyBookmarked) {
         await apiClient.unbookmarkPost(slug);
-        setBookmarkedPosts(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(slug);
-          return newSet;
-        });
+        updatePostBookmark(slug, false);
       } else {
         await apiClient.bookmarkPost(slug);
-        setBookmarkedPosts(prev => new Set([...prev, slug]));
+        updatePostBookmark(slug, true);
       }
       
     } catch (err) {
@@ -330,13 +324,13 @@ export default function Home() {
                       size="lg"
                       variant="ghost"
                       className={`w-12 h-12 rounded-full p-0 transition-smooth hover:scale-110 ${
-                        likedPosts.has(post.slug)
+                        isPostLiked(post.slug)
                           ? 'text-[#FE2C55] glow-accent'
                           : 'text-white hover:text-[#FE2C55] hover:bg-white/10'
                       }`}
                       onClick={() => handleLike(post.slug)}
                     >
-                      <Heart className={`h-7 w-7 ${likedPosts.has(post.slug) ? 'fill-current' : ''}`} />
+                      <Heart className={`h-7 w-7 ${isPostLiked(post.slug) ? 'fill-current' : ''}`} />
                     </Button>
                     <span className="caption-small text-white font-medium">
                       {postLikeCounts[post.slug] ?? post.like_count}
@@ -365,13 +359,13 @@ export default function Home() {
                       size="lg"
                       variant="ghost"
                       className={`w-12 h-12 rounded-full p-0 transition-smooth hover:scale-110 ${
-                        bookmarkedPosts.has(post.slug)
+                        isPostBookmarked(post.slug)
                           ? 'text-[#25F4EE] glow-cyan'
                           : 'text-white hover:text-[#25F4EE] hover:bg-white/10'
                       }`}
                       onClick={() => handleBookmark(post.slug)}
                     >
-                      <Bookmark className={`h-7 w-7 ${bookmarkedPosts.has(post.slug) ? 'fill-current' : ''}`} />
+                      <Bookmark className={`h-7 w-7 ${isPostBookmarked(post.slug) ? 'fill-current' : ''}`} />
                     </Button>
                   </div>
 

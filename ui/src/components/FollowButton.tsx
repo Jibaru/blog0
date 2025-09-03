@@ -31,7 +31,10 @@ export default function FollowButton({
   const [following, setFollowing] = useState(initialFollowing);
   const [followersCount, setFollowersCount] = useState(initialFollowersCount);
   const [isLoading, setIsLoading] = useState(false);
-  const { isAuthenticated, getApiClient, user } = useAuthStore();
+  const { isAuthenticated, getApiClient, user, isUserFollowed, updateUserFollow } = useAuthStore();
+  
+  // Use profile data if available, otherwise fall back to initial state
+  const isFollowingAuthor = isUserFollowed(authorId) || following;
   const { showToast } = useToast();
 
   // Don't show follow button if no author ID is provided
@@ -55,7 +58,7 @@ export default function FollowButton({
       const apiClient = getApiClient();
       
       let response;
-      if (following) {
+      if (isFollowingAuthor) {
         response = await apiClient.unfollowUser(authorId);
         showToast(`Unfollowed ${authorName}`, 'success');
       } else {
@@ -63,8 +66,13 @@ export default function FollowButton({
         showToast(`Following ${authorName}`, 'success');
       }
       
+      // Update local state
       setFollowing(response.following);
       setFollowersCount(response.followers_count);
+      
+      // Update profile state
+      updateUserFollow(authorId, response.following);
+      
       onFollowChange?.(response.following, response.followers_count);
       
     } catch (err) {
@@ -87,12 +95,12 @@ export default function FollowButton({
         onClick={handleFollow}
         disabled={isLoading}
         className={`w-10 h-10 rounded-full p-0 transition-smooth hover:scale-110 ${
-          following
+          isFollowingAuthor
             ? 'text-[#25F4EE] hover:text-[#25F4EE]/80'
             : 'text-white hover:text-[#25F4EE] hover:bg-white/10'
         } ${className}`}
       >
-        {following ? (
+        {isFollowingAuthor ? (
           <UserMinus className="h-5 w-5" />
         ) : (
           <UserPlus className="h-5 w-5" />
@@ -108,14 +116,14 @@ export default function FollowButton({
         onClick={handleFollow}
         disabled={isLoading}
         className={`${
-          following
+          isFollowingAuthor
             ? 'bg-transparent border border-[#25F4EE] text-[#25F4EE] hover:bg-[#25F4EE]/10'
             : 'bg-[#25F4EE] text-black hover:bg-[#25F4EE]/90'
         } transition-smooth ${className}`}
       >
         {isLoading ? (
           'Loading...'
-        ) : following ? (
+        ) : isFollowingAuthor ? (
           <>
             <UserMinus className="h-3 w-3 mr-1" />
             Following
@@ -135,14 +143,14 @@ export default function FollowButton({
       onClick={handleFollow}
       disabled={isLoading}
       className={`${
-        following
+        isFollowingAuthor
           ? 'bg-transparent border border-[#25F4EE] text-[#25F4EE] hover:bg-[#25F4EE]/10'
           : 'bg-[#25F4EE] text-black hover:bg-[#25F4EE]/90'
       } transition-smooth ${className}`}
     >
       {isLoading ? (
         'Loading...'
-      ) : following ? (
+      ) : isFollowingAuthor ? (
         <>
           <UserMinus className="h-4 w-4 mr-2" />
           Following
