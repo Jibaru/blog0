@@ -30,6 +30,8 @@ interface AuthActions {
   checkAuth: () => Promise<void>;
   getApiClient: () => Blog0ApiClient;
   fetchProfile: () => Promise<void>;
+  isTokenExpired: () => boolean;
+  checkTokenExpiration: () => void;
   // Efficient accessor methods
   isPostLiked: (postId: string) => boolean;
   isPostBookmarked: (postId: string) => boolean;
@@ -87,6 +89,12 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       setToken: (token: string) => {
+        // Check if token is expired before setting
+        if (get().isTokenExpired.call({ token })) {
+          console.warn('Received expired token, not setting auth state');
+          return;
+        }
+
         set({
           token,
           isAuthenticated: true,
@@ -121,6 +129,13 @@ export const useAuthStore = create<AuthStore>()(
           return;
         }
 
+        // Check if token is expired
+        if (get().isTokenExpired()) {
+          console.log('Token expired, logging out');
+          get().logout();
+          return;
+        }
+
         try {
           set({ isLoading: true });
 
@@ -147,7 +162,20 @@ export const useAuthStore = create<AuthStore>()(
 
       getApiClient: () => {
         const { token } = get();
-        const api = new Blog0ApiClient();
+        
+        // Check token expiration before creating API client
+        if (token && get().isTokenExpired()) {
+          console.log('Token expired while getting API client, logging out');
+          get().logout();
+          return new Blog0ApiClient(); // Return client without token
+        }
+        
+        const api = new Blog0ApiClient({
+          onTokenExpired: () => {
+            console.log('API client received token expired signal, logging out');
+            get().logout();
+          }
+        });
         
         if (token) {
           api.setApiToken(token);
@@ -160,6 +188,13 @@ export const useAuthStore = create<AuthStore>()(
         const { token, isAuthenticated } = get();
         
         if (!token || !isAuthenticated) {
+          return;
+        }
+
+        // Check token expiration before making API call
+        if (get().isTokenExpired()) {
+          console.log('Token expired while fetching profile, logging out');
+          get().logout();
           return;
         }
 
@@ -209,6 +244,33 @@ export const useAuthStore = create<AuthStore>()(
       isUserFollowed: (userId: string) => {
         const { followingUsers } = get();
         return followingUsers[userId] || false;
+      },
+
+      isTokenExpired: () => {
+        const { token } = get();
+        
+        if (!token) {
+          return true;
+        }
+
+        try {
+          // Decode JWT token to check expiration
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const currentTime = Math.floor(Date.now() / 1000);
+          
+          // Check if token has expired (with 30 second buffer)
+          return payload.exp && payload.exp < (currentTime + 30);
+        } catch (error) {
+          console.error('Error decoding token:', error);
+          return true; // Consider invalid tokens as expired
+        }
+      },
+
+      checkTokenExpiration: () => {
+        if (get().isTokenExpired()) {
+          console.log('Token expiration check: token expired, logging out');
+          get().logout();
+        }
       },
 
       // Update methods

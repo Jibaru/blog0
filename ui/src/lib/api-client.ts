@@ -200,6 +200,7 @@ export interface ApiClientConfig {
   baseUrl?: string;
   apiToken?: string;
   defaultHeaders?: Record<string, string>;
+  onTokenExpired?: () => void;
 }
 
 export class ApiError extends Error {
@@ -217,10 +218,12 @@ export class Blog0ApiClient {
   private baseUrl: string;
   private apiToken?: string;
   private defaultHeaders: Record<string, string>;
+  private onTokenExpired?: () => void;
 
   constructor(config: ApiClientConfig = {}) {
     this.baseUrl = config.baseUrl || 'https://blog0-backend.vercel.app';
     this.apiToken = config.apiToken;
+    this.onTokenExpired = config.onTokenExpired;
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       ...config.defaultHeaders,
@@ -229,6 +232,10 @@ export class Blog0ApiClient {
 
   setApiToken(token: string): void {
     this.apiToken = token;
+  }
+
+  setOnTokenExpired(callback: () => void): void {
+    this.onTokenExpired = callback;
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -254,6 +261,13 @@ export class Blog0ApiClient {
       } catch {
         errorResponse = await response.text();
       }
+      
+      // Handle 401 Unauthorized - token expired or invalid
+      if (response.status === 401 && this.onTokenExpired) {
+        console.log('Received 401, calling token expired callback');
+        this.onTokenExpired();
+      }
+      
       throw new ApiError(response.status, errorResponse);
     }
 
