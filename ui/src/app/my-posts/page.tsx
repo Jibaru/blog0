@@ -190,6 +190,29 @@ export default function MyPostsPage() {
                       {post.title}
                     </h3>
 
+                    {/* Post Summary */}
+                    {post.summary && (
+                      <p className="text-[#AFAFAF] text-sm mb-3 line-clamp-2 leading-relaxed">
+                        {post.summary}
+                      </p>
+                    )}
+
+                    {/* Tags */}
+                    {post.tags && post.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {post.tags.slice(0, 4).map((tag, index) => (
+                          <span key={index} className="bg-[#FE2C55]/20 text-[#FE2C55] px-2 py-1 rounded-full text-xs">
+                            #{tag}
+                          </span>
+                        ))}
+                        {post.tags.length > 4 && (
+                          <span className="bg-[#AFAFAF]/20 text-[#AFAFAF] px-2 py-1 rounded-full text-xs">
+                            +{post.tags.length - 4}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     {/* Post Meta */}
                     <div className="text-[#AFAFAF] text-sm mb-4 space-y-1">
                       <div>Created: {new Date(post.created_at).toLocaleDateString()}</div>

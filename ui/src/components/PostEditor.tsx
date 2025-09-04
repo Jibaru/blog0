@@ -252,7 +252,7 @@ export default function PostEditor({ postSlug }: PostEditorProps) {
                 height={600}
                 data-color-mode="dark"
                 style={{
-                  backgroundColor: 'transparent',
+                  backgroundColor: 'white',
                 }}
                 textareaProps={{
                   placeholder: 'Write your post content in Markdown...',

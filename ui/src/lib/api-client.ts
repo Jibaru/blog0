@@ -96,6 +96,8 @@ export interface GetPostBySlugResp {
   published_at?: string;
   raw_markdown: string;
   slug: string;
+  summary: string;
+  tags: string[];
   title: string;
 }
 

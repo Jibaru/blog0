@@ -291,12 +291,23 @@ export default function PostPage() {
             <div className="pb-8">
               <h1 className="title-large text-white leading-tight mb-4">{post.title}</h1>
 
-              {/* Hashtags */}
-              <div className="flex flex-wrap gap-2">
-                <span className="text-[#AFAFAF] caption-small font-medium">#blog</span>
-                <span className="text-[#AFAFAF] caption-small font-medium">#tech</span>
-                <span className="text-[#AFAFAF] caption-small font-medium">#development</span>
-              </div>
+              {/* Post Summary */}
+              {post.summary && (
+                <p className="text-[#AFAFAF] body-medium leading-relaxed mb-4">
+                  {post.summary}
+                </p>
+              )}
+
+              {/* Tags */}
+              {post.tags && post.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {post.tags.map((tag, index) => (
+                    <span key={index} className="text-[#FE2C55] caption-small font-medium">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Post content */}

@@ -302,6 +302,13 @@ export default function Home() {
                           {post.title}
                         </h2>
 
+                        {/* Post summary */}
+                        {post.summary && (
+                          <p className="text-[#AFAFAF] text-sm leading-relaxed line-clamp-3">
+                            {post.summary}
+                          </p>
+                        )}
+
                         {/* Post metadata */}
                         <div className="flex items-center space-x-4 text-[#AFAFAF]">
                           {post.published_at && (
@@ -310,8 +317,21 @@ export default function Home() {
                               {new Date(post.published_at).toLocaleDateString()}
                             </div>
                           )}
-                          <div className="caption-small text-[#FE2C55]">#blog #tech</div>
                         </div>
+                        
+                        {/* Tags */}
+                        {post.tags && post.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {post.tags.slice(0, 3).map((tag, index) => (
+                              <span key={index} className="caption-small text-[#FE2C55]">
+                                #{tag}
+                              </span>
+                            ))}
+                            {post.tags.length > 3 && (
+                              <span className="caption-small text-[#AFAFAF]">+{post.tags.length - 3} more</span>
+                            )}
+                          </div>
+                        )}
 
                         {/* Engagement preview */}
                         <div className="flex items-center space-x-4 text-[#AFAFAF] caption-small">
