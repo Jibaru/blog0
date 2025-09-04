@@ -38,7 +38,7 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 	bookmarkDAO := postgres.NewBookmarkDAO(db)
 	followDAO := postgres.NewFollowDAO(db)
 
-	postContentGenerator := infraServices.NewOpenAIGenerator(cfg.OpenAIApiKey, "gpt-5-mini")
+	postContentGenerator := infraServices.NewOpenAIGenerator(cfg.OpenAIApiKey, "gpt-4o")
 	nextIDFunc := uuid.NewString
 
 	startOAuthServ := services.NewStartOAuth(googleOAuthConfig)
