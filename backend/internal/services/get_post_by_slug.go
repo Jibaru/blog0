@@ -36,6 +36,8 @@ type CommentInfo struct {
 type GetPostBySlugResp struct {
 	ID          string        `json:"id"`
 	Title       string        `json:"title"`
+	Summary     string        `json:"summary"`
+	Tags        []string      `json:"tags"`
 	Slug        string        `json:"slug"`
 	RawMarkdown string        `json:"raw_markdown"`
 	Author      AuthorInfo    `json:"author"`
@@ -113,6 +115,8 @@ func (s *GetPostBySlug) Exec(ctx context.Context, req *GetPostBySlugReq) (*GetPo
 	return &GetPostBySlugResp{
 		ID:          post.ID,
 		Title:       post.Title,
+		Summary:     post.Summary,
+		Tags:        post.ItsTags(),
 		Slug:        post.Slug,
 		RawMarkdown: post.RawMarkdown,
 		Author:      AuthorInfo{ID: author.ID, Name: author.Username},

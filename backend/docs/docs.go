@@ -1086,6 +1086,15 @@ const docTemplate = `{
                 "slug": {
                     "type": "string"
                 },
+                "summary": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "title": {
                     "type": "string"
                 }

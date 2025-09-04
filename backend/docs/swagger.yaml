@@ -158,6 +158,12 @@ definitions:
         type: string
       slug:
         type: string
+      summary:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
       title:
         type: string
     type: object
