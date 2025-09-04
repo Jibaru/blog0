@@ -57,6 +57,8 @@ export interface CreatePostResp {
   published_at?: string;
   raw_markdown: string;
   slug: string;
+  summary: string;
+  tags: string[];
   title: string;
   updated_at: string;
 }
@@ -103,6 +105,8 @@ export interface MyPostItem {
   published_at?: string;
   slug: string;
   status: string;
+  summary: string;
+  tags: string[];
   title: string;
   updated_at: string;
 }
@@ -120,6 +124,8 @@ export interface PostItem {
   published_at?: string;
   slug: string;
   title: string;
+  summary: string;
+  tags: string[];
   comment_count: number;
   like_count: number;
 }
@@ -168,6 +174,8 @@ export interface UpdatePostResp {
   published_at?: string;
   raw_markdown: string;
   slug: string;
+  summary: string;
+  tags: string[];
   title: string;
   updated_at: string;
 }
