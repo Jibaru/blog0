@@ -3,7 +3,9 @@
     "allow": [
       "Read(C:\\Users\\Ignac\\Documentos\\Github\\blog0/**)",
       "Bash(git commit:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\backend\\cmd\\app/**)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\backend\\config/**)"
     ],
     "deny": [],
     "ask": []

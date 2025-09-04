@@ -18,6 +18,7 @@ type Config struct {
 	DBName             string `env:"DB_NAME"`
 	GoogleClientID     string `env:"GOOGLE_CLIENT_ID"`
 	GoogleClientSecret string `env:"GOOGLE_CLIENT_SECRET"`
+	OpenAIApiKey       string `env:"OPENAI_API_KEY"`
 }
 
 func Load() Config {

@@ -26,6 +26,8 @@ type MyPostItem struct {
 	ID          string     `json:"id"`
 	Title       string     `json:"title"`
 	Slug        string     `json:"slug"`
+	Summary     string     `json:"summary"`
+	Tags        []string   `json:"tags"`
 	PublishedAt *time.Time `json:"published_at"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
@@ -80,6 +82,8 @@ func (s *ListMyPosts) Exec(ctx context.Context, req *ListMyPostsReq) (*ListMyPos
 			ID:          post.ID,
 			Title:       post.Title,
 			Slug:        post.Slug,
+			Summary:     post.Summary,
+			Tags:        post.ItsTags(),
 			PublishedAt: post.PublishedAt,
 			CreatedAt:   post.CreatedAt,
 			UpdatedAt:   post.UpdatedAt,

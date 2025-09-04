@@ -48,8 +48,8 @@ func (dao *PostDAO) queryContext(ctx context.Context, query string, args ...inte
 
 func (dao *PostDAO) Create(ctx context.Context, m *Post) error {
 	query := `
-		INSERT INTO posts (id, author_id, title, slug, raw_markdown, published_at, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO posts (id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 
 	_, err := dao.execContext(
@@ -60,6 +60,8 @@ func (dao *PostDAO) Create(ctx context.Context, m *Post) error {
 		m.Title,
 		m.Slug,
 		m.RawMarkdown,
+		m.Summary,
+		m.Tags,
 		m.PublishedAt,
 		m.CreatedAt,
 		m.UpdatedAt,
@@ -75,10 +77,12 @@ func (dao *PostDAO) Update(ctx context.Context, m *Post) error {
 			title = $2,
 			slug = $3,
 			raw_markdown = $4,
-			published_at = $5,
-			created_at = $6,
-			updated_at = $7
-		WHERE id = $8
+			summary = $5,
+			Tags = $6,
+			published_at = $7,
+			created_at = $8,
+			updated_at = $9
+		WHERE id = $10
 	`
 
 	_, err := dao.execContext(ctx, query,
@@ -86,6 +90,8 @@ func (dao *PostDAO) Update(ctx context.Context, m *Post) error {
 		m.Title,
 		m.Slug,
 		m.RawMarkdown,
+		m.Summary,
+		m.Tags,
 		m.PublishedAt,
 		m.CreatedAt,
 		m.UpdatedAt,
@@ -125,7 +131,7 @@ func (dao *PostDAO) DeleteByPk(ctx context.Context, pk string) error {
 
 func (dao *PostDAO) FindByPk(ctx context.Context, pk string) (*Post, error) {
 	query := `
-		SELECT id, author_id, title, slug, raw_markdown, published_at, created_at, updated_at
+		SELECT id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at
 		FROM posts
 		WHERE id = $1
 	`
@@ -138,6 +144,8 @@ func (dao *PostDAO) FindByPk(ctx context.Context, pk string) (*Post, error) {
 		&m.Title,
 		&m.Slug,
 		&m.RawMarkdown,
+		&m.Summary,
+		&m.Tags,
 		&m.PublishedAt,
 		&m.CreatedAt,
 		&m.UpdatedAt,
@@ -156,11 +164,11 @@ func (dao *PostDAO) CreateMany(ctx context.Context, models []*Post) error {
 	}
 
 	placeholders := make([]string, len(models))
-	args := make([]interface{}, 0, len(models)*8)
+	args := make([]interface{}, 0, len(models)*10)
 
 	for i, model := range models {
-		placeholders[i] = fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
-			i*8+1, i*8+2, i*8+3, i*8+4, i*8+5, i*8+6, i*8+7, i*8+8)
+		placeholders[i] = fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+			i*10+1, i*10+2, i*10+3, i*10+4, i*10+5, i*10+6, i*10+7, i*10+8, i*10+9, i*10+10)
 
 		args = append(args,
 			model.ID,
@@ -168,6 +176,8 @@ func (dao *PostDAO) CreateMany(ctx context.Context, models []*Post) error {
 			model.Title,
 			model.Slug,
 			model.RawMarkdown,
+			model.Summary,
+			model.Tags,
 			model.PublishedAt,
 			model.CreatedAt,
 			model.UpdatedAt,
@@ -175,7 +185,7 @@ func (dao *PostDAO) CreateMany(ctx context.Context, models []*Post) error {
 	}
 
 	query := fmt.Sprintf(`
-		INSERT INTO posts (id, author_id, title, slug, raw_markdown, published_at, created_at, updated_at)
+		INSERT INTO posts (id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at)
 		VALUES %s
 	`, strings.Join(placeholders, ", "))
 
@@ -194,10 +204,12 @@ func (dao *PostDAO) UpdateMany(ctx context.Context, models []*Post) error {
 			title = $2,
 			slug = $3,
 			raw_markdown = $4,
-			published_at = $5,
-			created_at = $6,
-			updated_at = $7
-		WHERE id = $8
+			summary = $5,
+			Tags = $6,
+			published_at = $7,
+			created_at = $8,
+			updated_at = $9
+		WHERE id = $10
 	`
 
 	for _, model := range models {
@@ -206,6 +218,8 @@ func (dao *PostDAO) UpdateMany(ctx context.Context, models []*Post) error {
 			model.Title,
 			model.Slug,
 			model.RawMarkdown,
+			model.Summary,
+			model.Tags,
 			model.PublishedAt,
 			model.CreatedAt,
 			model.UpdatedAt,
@@ -238,7 +252,7 @@ func (dao *PostDAO) DeleteManyByPks(ctx context.Context, pks []string) error {
 
 func (dao *PostDAO) FindOne(ctx context.Context, where string, sort string, args ...interface{}) (*Post, error) {
 	query := `
-		SELECT id, author_id, title, slug, raw_markdown, published_at, created_at, updated_at
+		SELECT id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at
 		FROM posts
 	`
 
@@ -259,6 +273,8 @@ func (dao *PostDAO) FindOne(ctx context.Context, where string, sort string, args
 		&m.Title,
 		&m.Slug,
 		&m.RawMarkdown,
+		&m.Summary,
+		&m.Tags,
 		&m.PublishedAt,
 		&m.CreatedAt,
 		&m.UpdatedAt,
@@ -273,7 +289,7 @@ func (dao *PostDAO) FindOne(ctx context.Context, where string, sort string, args
 
 func (dao *PostDAO) FindAll(ctx context.Context, where string, sort string, args ...interface{}) ([]*Post, error) {
 	query := `
-		SELECT id, author_id, title, slug, raw_markdown, published_at, created_at, updated_at
+		SELECT id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at
 		FROM posts
 	`
 
@@ -300,6 +316,8 @@ func (dao *PostDAO) FindAll(ctx context.Context, where string, sort string, args
 			&m.Title,
 			&m.Slug,
 			&m.RawMarkdown,
+			&m.Summary,
+			&m.Tags,
 			&m.PublishedAt,
 			&m.CreatedAt,
 			&m.UpdatedAt,
@@ -319,7 +337,7 @@ func (dao *PostDAO) FindAll(ctx context.Context, where string, sort string, args
 
 func (dao *PostDAO) FindPaginated(ctx context.Context, limit, offset int, where string, sort string, args ...interface{}) ([]*Post, error) {
 	query := `
-		SELECT id, author_id, title, slug, raw_markdown, published_at, created_at, updated_at
+		SELECT id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at
 		FROM posts
 	`
 
@@ -348,6 +366,8 @@ func (dao *PostDAO) FindPaginated(ctx context.Context, limit, offset int, where 
 			&m.Title,
 			&m.Slug,
 			&m.RawMarkdown,
+			&m.Summary,
+			&m.Tags,
 			&m.PublishedAt,
 			&m.CreatedAt,
 			&m.UpdatedAt,

@@ -10,8 +10,9 @@ import (
 )
 
 type CreatePost struct {
-	postDAO dao.PostDAO
-	nextID  domain.NextID
+	postDAO              dao.PostDAO
+	nextID               domain.NextID
+	postContentGenerator domain.PostContentGenerator
 }
 
 type CreatePostReq struct {
@@ -27,16 +28,19 @@ type CreatePostResp struct {
 	Title       string     `json:"title"`
 	Slug        string     `json:"slug"`
 	RawMarkdown string     `json:"raw_markdown"`
+	Summary     string     `json:"summary"`
 	AuthorID    string     `json:"author_id"`
+	Tags        []string   `json:"tags"`
 	PublishedAt *time.Time `json:"published_at"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
-func NewCreatePost(postDAO dao.PostDAO, nextID domain.NextID) *CreatePost {
+func NewCreatePost(postDAO dao.PostDAO, nextID domain.NextID, postContentGenerator domain.PostContentGenerator) *CreatePost {
 	return &CreatePost{
-		postDAO: postDAO,
-		nextID:  nextID,
+		postDAO:              postDAO,
+		nextID:               nextID,
+		postContentGenerator: postContentGenerator,
 	}
 }
 
@@ -46,11 +50,21 @@ func (s *CreatePost) Exec(ctx context.Context, req *CreatePostReq) (*CreatePostR
 	var post *domain.Post
 	var err error
 
+	summary, err := s.postContentGenerator.GenerateSummary(ctx, req.RawMarkdown)
+	if err != nil {
+		return nil, err
+	}
+
+	tags, err := s.postContentGenerator.GenerateTags(ctx, req.RawMarkdown)
+	if err != nil {
+		return nil, err
+	}
+
 	if req.Publish {
 		publishedAt := time.Now()
-		post, err = domain.NewPublishedPost(postID, req.UserID, req.Title, req.Slug, req.RawMarkdown, publishedAt)
+		post, err = domain.NewPublishedPost(postID, req.UserID, req.Title, req.Slug, req.RawMarkdown, summary, tags, publishedAt)
 	} else {
-		post, err = domain.NewPost(postID, req.UserID, req.Title, req.Slug, req.RawMarkdown)
+		post, err = domain.NewPost(postID, req.UserID, req.Title, req.Slug, req.RawMarkdown, summary, tags)
 	}
 
 	if err != nil {
@@ -67,7 +81,9 @@ func (s *CreatePost) Exec(ctx context.Context, req *CreatePostReq) (*CreatePostR
 		Title:       post.Title,
 		Slug:        post.Slug,
 		RawMarkdown: post.RawMarkdown,
+		Summary:     post.Summary,
 		AuthorID:    post.AuthorID,
+		Tags:        post.ItsTags(),
 		PublishedAt: post.PublishedAt,
 		CreatedAt:   post.CreatedAt,
 		UpdatedAt:   post.UpdatedAt,

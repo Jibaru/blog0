@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"blog0/internal/domain"
 	"blog0/internal/domain/dao"
 )
 
 type UpdatePost struct {
-	postDAO dao.PostDAO
+	postDAO              dao.PostDAO
+	postContentGenerator domain.PostContentGenerator
 }
 
 type UpdatePostReq struct {
@@ -26,15 +28,18 @@ type UpdatePostResp struct {
 	Title       string     `json:"title"`
 	Slug        string     `json:"slug"`
 	RawMarkdown string     `json:"raw_markdown"`
+	Summary     string     `json:"summary"`
 	AuthorID    string     `json:"author_id"`
+	Tags        []string   `json:"tags"`
 	PublishedAt *time.Time `json:"published_at"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
-func NewUpdatePost(postDAO dao.PostDAO) *UpdatePost {
+func NewUpdatePost(postDAO dao.PostDAO, postContentGenerator domain.PostContentGenerator) *UpdatePost {
 	return &UpdatePost{
-		postDAO: postDAO,
+		postDAO:              postDAO,
+		postContentGenerator: postContentGenerator,
 	}
 }
 
@@ -49,7 +54,17 @@ func (s *UpdatePost) Exec(ctx context.Context, req *UpdatePostReq) (*UpdatePostR
 	}
 
 	if req.Title != "" && req.NewSlug != "" && req.RawMarkdown != "" {
-		err = post.Update(req.Title, req.NewSlug, req.RawMarkdown)
+		summary, err := s.postContentGenerator.GenerateSummary(ctx, req.RawMarkdown)
+		if err != nil {
+			return nil, err
+		}
+
+		tags, err := s.postContentGenerator.GenerateTags(ctx, req.RawMarkdown)
+		if err != nil {
+			return nil, err
+		}
+
+		err = post.Update(req.Title, req.NewSlug, req.RawMarkdown, summary, tags)
 		if err != nil {
 			return nil, fmt.Errorf("failed to update post: %w", err)
 		}
@@ -74,7 +89,9 @@ func (s *UpdatePost) Exec(ctx context.Context, req *UpdatePostReq) (*UpdatePostR
 		Title:       post.Title,
 		Slug:        post.Slug,
 		RawMarkdown: post.RawMarkdown,
+		Summary:     post.Summary,
 		AuthorID:    post.AuthorID,
+		Tags:        post.ItsTags(),
 		PublishedAt: post.PublishedAt,
 		CreatedAt:   post.CreatedAt,
 		UpdatedAt:   post.UpdatedAt,

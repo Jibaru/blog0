@@ -203,18 +203,30 @@ Interactive API documentation is available at `/api/swagger/index.html` when the
 
 ## Configuration
 
-The application uses environment-based configuration:
+The application uses environment-based configuration. Create a `.env` file in the project root with the following variables:
 
-```go
-type Config struct {
-    Port              string
-    DatabaseURL       string
-    JWTSecret         string
-    GoogleClientID    string
-    GoogleClientSecret string
-    APIBaseURI        string
-    WebBaseURI        string
-}
+```env
+# Database Configuration
+POSTGRES_URI="postgresql://user:password@host:port/database?sslmode=require"
+DB_NAME="your_database_name"
+
+# Authentication
+JWT_SECRET="your_jwt_secret_key"
+GOOGLE_CLIENT_ID="your_google_oauth_client_id"
+GOOGLE_CLIENT_SECRET="your_google_oauth_client_secret"
+
+# Server Configuration
+API_PORT="8080"
+API_BASE_URI="https://your-api-domain.com"
+WEB_BASE_URI="https://your-frontend-domain.com"
+
+# OpenAI Integration
+OPENAI_API_KEY="your_openai_api_key"
+
+# Goose Migration Settings
+GOOSE_DRIVER="postgres"
+GOOSE_DBSTRING="postgresql://user:password@host:port/database?sslmode=require"
+GOOSE_MIGRATION_DIR="./db/migrations"
 ```
 
 ## Database Schema
