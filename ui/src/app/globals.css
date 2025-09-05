@@ -211,6 +211,7 @@
   .w-md-editor {
     background-color: #121212 !important;
     color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
   }
 
   .w-md-editor-text-textarea,
@@ -223,6 +224,62 @@
   .w-md-editor-text-input,
   .w-md-editor-text-textarea {
     background-color: #121212 !important;
+  }
+
+  .w-md-editor-text-textarea textarea {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+  }
+
+  .w-md-editor-text textarea {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+  }
+
+  /* Fix textarea and input visibility - Ultra aggressive overrides */
+  .w-md-editor textarea,
+  .w-md-editor input,
+  .w-md-editor .w-md-editor-text textarea,
+  .w-md-editor .w-md-editor-text-area textarea,
+  .w-md-editor .w-md-editor-text-container textarea,
+  .w-md-editor .w-md-editor-text-input textarea,
+  .w-md-editor-text-textarea > textarea,
+  .w-md-editor-text-input > textarea,
+  .w-md-editor-text > textarea,
+  .w-md-editor div[data-color-mode="dark"] textarea,
+  .w-md-editor div textarea,
+  .w-md-editor span textarea {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+    border: none !important;
+    caret-color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-shadow: none !important;
+  }
+
+  /* Force white text on all text elements */
+  .w-md-editor *[contenteditable="true"],
+  .w-md-editor *[contenteditable],
+  .w-md-editor .w-md-editor-text,
+  .w-md-editor .w-md-editor-text-container,
+  .w-md-editor .w-md-editor-text-area,
+  .w-md-editor .w-md-editor-text-input {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
+  /* Ensure text selection is visible */
+  .w-md-editor textarea::selection,
+  .w-md-editor input::selection {
+    background-color: rgba(254, 44, 85, 0.3) !important;
+    color: #ffffff !important;
+  }
+
+  /* Fix placeholder text */
+  .w-md-editor textarea::placeholder,
+  .w-md-editor input::placeholder {
+    color: #afafaf !important;
+    opacity: 1 !important;
   }
 
   .w-md-editor-preview {
@@ -492,6 +549,37 @@
   .prose-blog0 pre .hljs-built_in,
   .prose-blog0 pre .hljs-builtin-name {
     color: #ffa500;
+  }
+
+  /* Additional MDEditor overrides - Nuclear option */
+  .w-md-editor * {
+    color: inherit !important;
+  }
+
+  .w-md-editor,
+  .w-md-editor *,
+  .w-md-editor textarea,
+  .w-md-editor input,
+  .w-md-editor div,
+  .w-md-editor span,
+  .w-md-editor pre,
+  .w-md-editor code {
+    color: #ffffff !important;
+    background-color: #121212 !important;
+  }
+
+  /* Override any possible nested selectors */
+  .w-md-editor textarea[style*="color"],
+  .w-md-editor input[style*="color"],
+  .w-md-editor div[style*="color"],
+  .w-md-editor span[style*="color"] {
+    color: #ffffff !important;
+  }
+
+  /* Force white text using CSS custom properties */
+  .w-md-editor {
+    --md-editor-text-color: #ffffff !important;
+    --md-editor-bg-color: #121212 !important;
   }
 
   /* Audio Player Styles */

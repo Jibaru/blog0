@@ -89,12 +89,32 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       setToken: (token: string) => {
+        // Create a helper function to check if a specific token is expired
+        const checkTokenExpired = (tokenToCheck: string) => {
+          if (!tokenToCheck) {
+            return true;
+          }
+
+          try {
+            // Decode JWT token to check expiration
+            const payload = JSON.parse(atob(tokenToCheck.split('.')[1]));
+            const currentTime = Math.floor(Date.now() / 1000);
+            
+            // Check if token has expired (with 30 second buffer)
+            return payload.exp && payload.exp < (currentTime + 30);
+          } catch (error) {
+            console.error('Error decoding token:', error);
+            return true; // Consider invalid tokens as expired
+          }
+        };
+
         // Check if token is expired before setting
-        if (get().isTokenExpired.call({ token })) {
+        if (checkTokenExpired(token)) {
           console.warn('Received expired token, not setting auth state');
           return;
         }
 
+        console.log('Setting valid token in auth state');
         set({
           token,
           isAuthenticated: true,

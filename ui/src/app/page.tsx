@@ -709,12 +709,10 @@ export default function Home() {
               
               {/* User interaction required prompt */}
               {showPlayPrompt && (
-                <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-black/90 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap border border-white/10">
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-16 bg-black/90 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-full whitespace-nowrap border border-white/10">
                   <div className="flex items-center">
-                    <Play className="h-3 w-3 mr-2 text-[#FE2C55]" />
-                    Tap to enable audio
+                    Tap play button to enable audio
                   </div>
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-black/90"></div>
                 </div>
               )}
             </div>

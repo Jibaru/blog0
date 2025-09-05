@@ -251,9 +251,6 @@ export default function PostEditor({ postSlug }: PostEditorProps) {
                 hideToolbar={previewMode}
                 height={600}
                 data-color-mode="dark"
-                style={{
-                  backgroundColor: 'white',
-                }}
                 textareaProps={{
                   placeholder: 'Write your post content in Markdown...',
                   style: {
