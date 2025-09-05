@@ -4,7 +4,15 @@
       "Bash(tree:*)",
       "WebSearch",
       "Bash(npm run dev:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\ui/**)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\ui/**)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\ui\\src/**)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\ui\\src\\app/**)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\ui\\src\\app/**)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\ui\\src\\lib/**)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\ui\\src\\lib/**)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\ui\\src\\lib/**)"
     ],
     "deny": [],
     "ask": []

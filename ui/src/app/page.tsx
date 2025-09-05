@@ -18,11 +18,16 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [currentPostIndex, setCurrentPostIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const loadingRef = useRef(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const lastPostRef = useRef<HTMLDivElement>(null);
+  
+  // TikTok-style navigation refs
+  const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef(0);
+  const touchEndY = useRef(0);
+  const isTransitioning = useRef(false);
   
   // Track local like counts for posts
   const [postLikeCounts, setPostLikeCounts] = useState<Record<string, number>>({});
@@ -37,7 +42,7 @@ export default function Home() {
   } = useAuthStore();
   const { showToast } = useToast();
 
-  const fetchPosts = async (page: number, append = false) => {
+  const fetchPosts = useCallback(async (page: number, append = false) => {
     try {
       if (page === 1) {
         setLoading(true);
@@ -78,10 +83,14 @@ export default function Home() {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [getApiClient, showToast]);
 
-  const loadMore = useCallback(() => {
-    if (!loadingRef.current && hasMore && !loadingMore) {
+  // TikTok-style navigation functions
+  const goToNextPost = useCallback(() => {
+    if (isTransitioning.current) return;
+    
+    // If we're at the last post and have more content, load next page
+    if (currentPostIndex === posts.length - 1 && hasMore && !loadingMore) {
       loadingRef.current = true;
       const nextPage = currentPage + 1;
       setCurrentPage(nextPage);
@@ -95,7 +104,75 @@ export default function Home() {
         loadingRef.current = false;
       });
     }
-  }, [hasMore, loadingMore, currentPage]);
+    
+    // Navigate to next post if available
+    if (currentPostIndex < posts.length - 1) {
+      isTransitioning.current = true;
+      setCurrentPostIndex(prev => prev + 1);
+      setTimeout(() => {
+        isTransitioning.current = false;
+      }, 200);
+    }
+  }, [currentPostIndex, posts.length, hasMore, loadingMore, currentPage, fetchPosts, showToast]);
+
+  const goToPreviousPost = useCallback(() => {
+    if (isTransitioning.current) return;
+    
+    if (currentPostIndex > 0) {
+      isTransitioning.current = true;
+      setCurrentPostIndex(prev => prev - 1);
+      setTimeout(() => {
+        isTransitioning.current = false;
+      }, 200);
+    }
+  }, [currentPostIndex]);
+
+  // Touch gesture handling
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    touchEndY.current = e.changedTouches[0].clientY;
+    const deltaY = touchStartY.current - touchEndY.current;
+    const minSwipeDistance = 50;
+
+    if (Math.abs(deltaY) > minSwipeDistance) {
+      if (deltaY > 0) {
+        // Swiped up - next post
+        goToNextPost();
+      } else {
+        // Swiped down - previous post
+        goToPreviousPost();
+      }
+    }
+  }, [goToNextPost, goToPreviousPost]);
+
+  // Wheel/scroll handling for desktop
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    
+    if (Math.abs(e.deltaY) > 10) {
+      if (e.deltaY > 0) {
+        // Scrolled down - next post
+        goToNextPost();
+      } else {
+        // Scrolled up - previous post
+        goToPreviousPost();
+      }
+    }
+  }, [goToNextPost, goToPreviousPost]);
+
+  // Keyboard navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      goToNextPost();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      goToPreviousPost();
+    }
+  }, [goToNextPost, goToPreviousPost]);
 
   const handleLike = async (slug: string) => {
     if (!isAuthenticated) {
@@ -156,41 +233,43 @@ export default function Home() {
 
   useEffect(() => {
     fetchPosts(1);
-  }, []);
+  }, [fetchPosts]);
 
-  // Set up intersection observer when posts change
+  // Set up event listeners for navigation
   useEffect(() => {
-    if (!lastPostRef.current || !hasMore) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-    // Clean up previous observer
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-
-    // Create new observer
-    observerRef.current = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && hasMore && !loadingMore && !loadingRef.current) {
-          console.log('Last post is visible, loading more posts...');
-          loadMore();
-        }
-      },
-      {
-        rootMargin: '200px',
-        threshold: 0.1,
-      }
-    );
-
-    // Observe the last post
-    observerRef.current.observe(lastPostRef.current);
+    // Add wheel event listener
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    
+    // Add keyboard event listener
+    document.addEventListener('keydown', handleKeyDown);
 
     // Cleanup
     return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
+      container.removeEventListener('wheel', handleWheel);
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [posts, hasMore, loadingMore, loadMore]);
+  }, [handleWheel, handleKeyDown]);
+
+  // Auto-load next page when approaching end
+  useEffect(() => {
+    if (currentPostIndex >= posts.length - 2 && hasMore && !loadingMore && !loadingRef.current) {
+      loadingRef.current = true;
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      fetchPosts(nextPage, true).catch((error) => {
+        if (error instanceof ApiError) {
+          showToast(error.message);
+        } else {
+          showToast('Failed to load more posts');
+        }
+      }).finally(() => {
+        loadingRef.current = false;
+      });
+    }
+  }, [currentPostIndex, posts.length, hasMore, loadingMore, currentPage, fetchPosts, showToast]);
 
   if (loading) {
     return (
@@ -253,8 +332,13 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Posts container */}
-      <div className="posts-scroll">
+      {/* TikTok-style single post container */}
+      <div 
+        ref={containerRef}
+        className="tiktok-container"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {posts.length === 0 ? (
           <div className="post-item">
             <div className="text-center space-y-4">
@@ -264,21 +348,39 @@ export default function Home() {
           </div>
         ) : (
           <>
-            <div className="space-y-0">
-              {posts.map((post, index) => (
-                <div 
-                  key={post.slug} 
-                  ref={index === posts.length - 1 ? lastPostRef : null}
-                  className="post-item relative"
-                >
+            {/* Render current post and adjacent posts for smooth transitions */}
+            {posts.map((post, index) => {
+              const position = index - currentPostIndex;
+              let positionClass = '';
+              
+              if (position === 0) {
+                positionClass = 'current-post';
+              } else if (position === 1) {
+                positionClass = 'next-post';
+              } else if (position === -1) {
+                positionClass = 'prev-post';
+              } else {
+                // Hide posts that are not adjacent
+                return null;
+              }
+              
+              return (
+              <div 
+                key={post.slug}
+                className={`post-item-tiktok ${positionClass}`}
+                style={{
+                  transform: `translateY(${position * 100}%)`,
+                }}
+              >
                 {/* Background content area */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/20 to-black/80" />
 
                 {/* Main content */}
-                <div className="relative z-10 w-full max-w-sm mx-auto px-4 h-full flex flex-col justify-between">
-                  {/* Author info at top */}
-                  <div className="pt-20 flex items-center justify-between pr-16">
-                    <div className="flex items-center space-x-3">
+                <div className="relative z-10 w-full h-full flex flex-col">
+                  {/* Content container - centered vertically */}
+                  <div className="flex-1 flex flex-col justify-center px-4 pr-20 max-w-md mx-auto w-full">
+                    {/* Author info */}
+                    <div className="mb-8 flex items-center space-x-3">
                       <Avatar className="w-12 h-12 border-2 border-white/20">
                         <AvatarFallback className="bg-[#FE2C55] text-white font-bold">
                           {post.author.charAt(0).toUpperCase()}
@@ -291,20 +393,18 @@ export default function Home() {
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Bottom overlay with post info */}
-                  <div className="pb-8 pr-16">
+                    {/* Post info */}
                     <Link href={`/post/${post.slug}`} className="block">
                       <div className="space-y-4">
                         {/* Post title */}
-                        <h2 className="text-xl md:text-2xl font-bold leading-tight text-white break-words">
+                        <h2 className="text-2xl md:text-3xl font-bold leading-tight text-white break-words">
                           {post.title}
                         </h2>
 
                         {/* Post summary */}
                         {post.summary && (
-                          <p className="text-[#AFAFAF] text-sm leading-relaxed line-clamp-3">
+                          <p className="text-[#AFAFAF] text-base leading-relaxed line-clamp-4">
                             {post.summary}
                           </p>
                         )}
@@ -321,26 +421,26 @@ export default function Home() {
                         
                         {/* Tags */}
                         {post.tags && post.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {post.tags.slice(0, 3).map((tag, index) => (
-                              <span key={index} className="caption-small text-[#FE2C55]">
+                          <div className="flex flex-wrap gap-2">
+                            {post.tags.slice(0, 3).map((tag, tagIndex) => (
+                              <span key={tagIndex} className="text-sm text-[#FE2C55] font-medium">
                                 #{tag}
                               </span>
                             ))}
                             {post.tags.length > 3 && (
-                              <span className="caption-small text-[#AFAFAF]">+{post.tags.length - 3} more</span>
+                              <span className="text-sm text-[#AFAFAF]">+{post.tags.length - 3} more</span>
                             )}
                           </div>
                         )}
 
                         {/* Engagement preview */}
-                        <div className="flex items-center space-x-4 text-[#AFAFAF] caption-small">
+                        <div className="flex items-center space-x-6 text-[#AFAFAF] text-sm">
                           <span className="flex items-center">
-                            <Heart className="h-3 w-3 mr-1" />
+                            <Heart className="h-4 w-4 mr-2" />
                             {postLikeCounts[post.slug] ?? post.like_count} likes
                           </span>
                           <span className="flex items-center">
-                            <MessageCircle className="h-3 w-3 mr-1" />
+                            <MessageCircle className="h-4 w-4 mr-2" />
                             {post.comment_count} comments
                           </span>
                         </div>
@@ -426,20 +526,23 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              ))}
+              );
+            })}
+
+            {/* Post progress indicator */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center space-x-1 z-30">
+              <div className="text-[#AFAFAF] caption-small">
+                {currentPostIndex + 1} / {posts.length}
+                {hasMore && ' + more'}
+              </div>
             </div>
 
-            {/* Loading more indicator */}
+            {/* Loading indicator */}
             {loadingMore && (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-white text-lg">Loading more posts...</div>
-              </div>
-            )}
-
-            {/* End of posts indicator */}
-            {!hasMore && posts.length > 0 && (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-[#AFAFAF] text-sm">You&apos;ve reached the end!</div>
+              <div className="absolute top-4 right-4 z-30">
+                <div className="text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+                  Loading...
+                </div>
               </div>
             )}
           </>
