@@ -1083,10 +1083,16 @@ const docTemplate = `{
                 "raw_markdown": {
                     "type": "string"
                 },
+                "raw_markdown_audio_url": {
+                    "type": "string"
+                },
                 "slug": {
                     "type": "string"
                 },
                 "summary": {
+                    "type": "string"
+                },
+                "summary_audio_url": {
                     "type": "string"
                 },
                 "tags": {
@@ -1220,6 +1226,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "summary": {
+                    "type": "string"
+                },
+                "summary_audio_url": {
                     "type": "string"
                 },
                 "tags": {

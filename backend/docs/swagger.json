@@ -1077,10 +1077,16 @@
                 "raw_markdown": {
                     "type": "string"
                 },
+                "raw_markdown_audio_url": {
+                    "type": "string"
+                },
                 "slug": {
                     "type": "string"
                 },
                 "summary": {
+                    "type": "string"
+                },
+                "summary_audio_url": {
                     "type": "string"
                 },
                 "tags": {
@@ -1214,6 +1220,9 @@
                     "type": "string"
                 },
                 "summary": {
+                    "type": "string"
+                },
+                "summary_audio_url": {
                     "type": "string"
                 },
                 "tags": {
