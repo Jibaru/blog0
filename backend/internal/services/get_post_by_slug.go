@@ -34,16 +34,18 @@ type CommentInfo struct {
 }
 
 type GetPostBySlugResp struct {
-	ID          string        `json:"id"`
-	Title       string        `json:"title"`
-	Summary     string        `json:"summary"`
-	Tags        []string      `json:"tags"`
-	Slug        string        `json:"slug"`
-	RawMarkdown string        `json:"raw_markdown"`
-	Author      AuthorInfo    `json:"author"`
-	PublishedAt time.Time     `json:"published_at"`
-	LikesCount  int           `json:"likes_count"`
-	Comments    []CommentInfo `json:"comments"`
+	ID                  string        `json:"id"`
+	Title               string        `json:"title"`
+	Summary             string        `json:"summary"`
+	Tags                []string      `json:"tags"`
+	Slug                string        `json:"slug"`
+	RawMarkdown         string        `json:"raw_markdown"`
+	Author              AuthorInfo    `json:"author"`
+	PublishedAt         time.Time     `json:"published_at"`
+	LikesCount          int           `json:"likes_count"`
+	Comments            []CommentInfo `json:"comments"`
+	RawMarkdownAudioURL *string       `json:"raw_markdown_audio_url"`
+	SummaryAudioURL     *string       `json:"summary_audio_url"`
 }
 
 func NewGetPostBySlug(postDAO dao.PostDAO, userDAO dao.UserDAO, commentDAO dao.CommentDAO, postLikeDAO dao.PostLikeDAO) *GetPostBySlug {
@@ -113,15 +115,17 @@ func (s *GetPostBySlug) Exec(ctx context.Context, req *GetPostBySlugReq) (*GetPo
 	}
 
 	return &GetPostBySlugResp{
-		ID:          post.ID,
-		Title:       post.Title,
-		Summary:     post.Summary,
-		Tags:        post.ItsTags(),
-		Slug:        post.Slug,
-		RawMarkdown: post.RawMarkdown,
-		Author:      AuthorInfo{ID: author.ID, Name: author.Username},
-		PublishedAt: *post.PublishedAt,
-		LikesCount:  int(likesCount),
-		Comments:    commentInfos,
+		ID:                  post.ID,
+		Title:               post.Title,
+		Summary:             post.Summary,
+		Tags:                post.ItsTags(),
+		Slug:                post.Slug,
+		RawMarkdown:         post.RawMarkdown,
+		Author:              AuthorInfo{ID: author.ID, Name: author.Username},
+		PublishedAt:         *post.PublishedAt,
+		LikesCount:          int(likesCount),
+		Comments:            commentInfos,
+		RawMarkdownAudioURL: post.RawMarkdownAudioURL,
+		SummaryAudioURL:     post.SummaryAudioURL,
 	}, nil
 }

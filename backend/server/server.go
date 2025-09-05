@@ -40,6 +40,8 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 
 	postContentGenerator := infraServices.NewOpenAIGenerator(cfg.OpenAIApiKey, "gpt-4o")
 	nextIDFunc := uuid.NewString
+	triggerDev := infraServices.NewTriggerDev(cfg.TriggerSecretKey)
+	eventBus := infraServices.NewTriggerDevEventBus(triggerDev)
 
 	startOAuthServ := services.NewStartOAuth(googleOAuthConfig)
 	finishOAuthServ := services.NewFinishOAuth(userDAO, googleOAuthConfig, infraServices.GoogleInfoExtractor, nextIDFunc, cfg)
@@ -49,8 +51,8 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 	toggleLikeServ := services.NewToggleLike(postDAO, postLikeDAO, nextIDFunc)
 	bookmarkPostServ := services.NewBookmarkPost(postDAO, bookmarkDAO, nextIDFunc)
 	unbookmarkPostServ := services.NewUnbookmarkPost(postDAO, bookmarkDAO)
-	createPostServ := services.NewCreatePost(postDAO, nextIDFunc, postContentGenerator)
-	updatePostServ := services.NewUpdatePost(postDAO, postContentGenerator)
+	createPostServ := services.NewCreatePost(postDAO, nextIDFunc, postContentGenerator, eventBus)
+	updatePostServ := services.NewUpdatePost(postDAO, postContentGenerator, eventBus)
 	deletePostServ := services.NewDeletePost(postDAO)
 	listMyPostsServ := services.NewListMyPosts(postDAO, userDAO)
 	getAuthorInfoServ := services.NewGetAuthorInfo(userDAO, postDAO, postLikeDAO)

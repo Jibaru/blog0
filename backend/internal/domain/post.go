@@ -13,10 +13,13 @@ type Post struct {
 	Slug        string          `sql:"slug"`
 	RawMarkdown string          `sql:"raw_markdown"`
 	Summary     string          `sql:"summary"`
-	Tags        json.RawMessage `sql:tags`
+	Tags        json.RawMessage `sql:"tags"`
 	PublishedAt *time.Time      `sql:"published_at"`
 	CreatedAt   time.Time       `sql:"created_at"`
 	UpdatedAt   time.Time       `sql:"updated_at"`
+
+	RawMarkdownAudioURL *string `sql:"raw_markdown_audio_url"`
+	SummaryAudioURL     *string `sql:"summary_audio_url"`
 }
 
 func NewPost(id string, authorID string, title string, slug string, rawMarkdown string, summary string, tags []string) (*Post, error) {
@@ -129,4 +132,12 @@ func (p *Post) ItsTags() []string {
 	}
 	_ = json.Unmarshal(p.Tags, &tags)
 	return tags
+}
+
+type PostCreated struct {
+	PostID string
+}
+
+type PostUpdated struct {
+	PostID string
 }

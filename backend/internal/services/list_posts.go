@@ -26,15 +26,16 @@ type ListPostsReq struct {
 }
 
 type PostItem struct {
-	Title        string    `json:"title"`
-	Summary      string    `json:"summary"`
-	Tags         []string  `json:"tags"`
-	Author       string    `json:"author"`
-	AuthorID     string    `json:"author_id"`
-	PublishedAt  time.Time `json:"published_at"`
-	Slug         string    `json:"slug"`
-	LikeCount    int       `json:"like_count"`
-	CommentCount int       `json:"comment_count"`
+	Title           string    `json:"title"`
+	Summary         string    `json:"summary"`
+	Tags            []string  `json:"tags"`
+	Author          string    `json:"author"`
+	AuthorID        string    `json:"author_id"`
+	PublishedAt     time.Time `json:"published_at"`
+	Slug            string    `json:"slug"`
+	LikeCount       int       `json:"like_count"`
+	CommentCount    int       `json:"comment_count"`
+	SummaryAudioURL *string   `json:"summary_audio_url"`
 }
 
 type ListPostsResp struct {
@@ -121,15 +122,16 @@ func (s *ListPosts) Exec(ctx context.Context, req *ListPostsReq) (*ListPostsResp
 		}
 
 		items = append(items, PostItem{
-			Title:        post.Title,
-			Summary:      post.Summary,
-			Tags:         post.ItsTags(),
-			Author:       author.Username,
-			AuthorID:     author.ID,
-			PublishedAt:  *post.PublishedAt,
-			Slug:         post.Slug,
-			LikeCount:    likeCounts[post.ID],
-			CommentCount: commentCounts[post.ID],
+			Title:           post.Title,
+			Summary:         post.Summary,
+			Tags:            post.ItsTags(),
+			Author:          author.Username,
+			AuthorID:        author.ID,
+			PublishedAt:     *post.PublishedAt,
+			Slug:            post.Slug,
+			LikeCount:       likeCounts[post.ID],
+			CommentCount:    commentCounts[post.ID],
+			SummaryAudioURL: post.SummaryAudioURL,
 		})
 	}
 

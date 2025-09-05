@@ -13,6 +13,7 @@ type CreatePost struct {
 	postDAO              dao.PostDAO
 	nextID               domain.NextID
 	postContentGenerator domain.PostContentGenerator
+	eventBus             domain.EventBus
 }
 
 type CreatePostReq struct {
@@ -36,11 +37,12 @@ type CreatePostResp struct {
 	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
-func NewCreatePost(postDAO dao.PostDAO, nextID domain.NextID, postContentGenerator domain.PostContentGenerator) *CreatePost {
+func NewCreatePost(postDAO dao.PostDAO, nextID domain.NextID, postContentGenerator domain.PostContentGenerator, eventBus domain.EventBus) *CreatePost {
 	return &CreatePost{
 		postDAO:              postDAO,
 		nextID:               nextID,
 		postContentGenerator: postContentGenerator,
+		eventBus:             eventBus,
 	}
 }
 
@@ -74,6 +76,15 @@ func (s *CreatePost) Exec(ctx context.Context, req *CreatePostReq) (*CreatePostR
 	err = s.postDAO.Create(ctx, post)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save post: %w", err)
+	}
+
+	err = s.eventBus.ProcessEvents([]any{
+		&domain.PostCreated{
+			PostID: post.ID,
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to process events: %w", err)
 	}
 
 	return &CreatePostResp{

@@ -12,6 +12,7 @@ import (
 type UpdatePost struct {
 	postDAO              dao.PostDAO
 	postContentGenerator domain.PostContentGenerator
+	eventBus             domain.EventBus
 }
 
 type UpdatePostReq struct {
@@ -36,10 +37,11 @@ type UpdatePostResp struct {
 	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
-func NewUpdatePost(postDAO dao.PostDAO, postContentGenerator domain.PostContentGenerator) *UpdatePost {
+func NewUpdatePost(postDAO dao.PostDAO, postContentGenerator domain.PostContentGenerator, eventBus domain.EventBus) *UpdatePost {
 	return &UpdatePost{
 		postDAO:              postDAO,
 		postContentGenerator: postContentGenerator,
+		eventBus:             eventBus,
 	}
 }
 
@@ -82,6 +84,15 @@ func (s *UpdatePost) Exec(ctx context.Context, req *UpdatePostReq) (*UpdatePostR
 	err = s.postDAO.Update(ctx, post)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save post: %w", err)
+	}
+
+	err = s.eventBus.ProcessEvents([]any{
+		&domain.PostUpdated{
+			PostID: post.ID,
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to process events: %w", err)
 	}
 
 	return &UpdatePostResp{
