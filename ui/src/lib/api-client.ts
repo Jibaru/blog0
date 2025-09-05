@@ -130,6 +130,7 @@ export interface PostItem {
   tags: string[];
   comment_count: number;
   like_count: number;
+  summary_audio_url: string|null;
 }
 
 export interface ListPostsResp {

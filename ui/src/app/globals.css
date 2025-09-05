@@ -493,4 +493,34 @@
   .prose-blog0 pre .hljs-builtin-name {
     color: #ffa500;
   }
+
+  /* Audio Player Styles */
+  .audio-progress-bar {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
+    transition: all 0.2s ease;
+  }
+
+  .audio-progress-bar:hover {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%);
+  }
+
+  .audio-progress-fill {
+    background: linear-gradient(90deg, #fe2c55 0%, #ff4d73 100%);
+    box-shadow: 0 0 8px rgba(254, 44, 85, 0.3);
+  }
+
+  .audio-play-button {
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .audio-play-button:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.05);
+  }
+
+  .audio-play-button:active {
+    transform: scale(0.95);
+  }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Bookmark, Calendar, Heart, LogIn, MessageCircle, Share, User, Plus } from 'lucide-react';
+import { Bookmark, Calendar, Heart, LogIn, MessageCircle, Share, User, Plus, Play, Pause } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import LoginModal from '@/components/auth/LoginModal';
@@ -28,6 +28,15 @@ export default function Home() {
   const touchStartY = useRef(0);
   const touchEndY = useRef(0);
   const isTransitioning = useRef(false);
+  
+  // Audio player state
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [showPlayPrompt, setShowPlayPrompt] = useState(false);
   
   // Track local like counts for posts
   const [postLikeCounts, setPostLikeCounts] = useState<Record<string, number>>({});
@@ -85,6 +94,104 @@ export default function Home() {
     }
   }, [getApiClient, showToast]);
 
+  // Audio player functions
+  const playAudio = useCallback(async (audioUrl: string, forceAttempt = false) => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      
+      // Set up audio event listeners
+      audioRef.current.addEventListener('loadedmetadata', () => {
+        setDuration(audioRef.current?.duration || 0);
+      });
+      
+      audioRef.current.addEventListener('timeupdate', () => {
+        setCurrentTime(audioRef.current?.currentTime || 0);
+      });
+      
+      audioRef.current.addEventListener('ended', () => {
+        setIsPlaying(false);
+        setCurrentTime(0);
+      });
+      
+      audioRef.current.addEventListener('play', () => {
+        setIsPlaying(true);
+      });
+      
+      audioRef.current.addEventListener('pause', () => {
+        setIsPlaying(false);
+      });
+    }
+    
+    // If same audio, just play/resume
+    if (currentAudioUrl === audioUrl) {
+      try {
+        await audioRef.current.play();
+      } catch (error) {
+        if (!hasUserInteracted && !forceAttempt) {
+          setShowPlayPrompt(true);
+        }
+        console.warn('Audio play failed:', error);
+      }
+      return;
+    }
+    
+    // New audio - load and attempt to play
+    setCurrentAudioUrl(audioUrl);
+    audioRef.current.src = audioUrl;
+    audioRef.current.currentTime = 0;
+    setCurrentTime(0);
+    
+    try {
+      await audioRef.current.play();
+    } catch (error) {
+      if (!hasUserInteracted && !forceAttempt) {
+        setShowPlayPrompt(true);
+      } else {
+        console.warn('Audio play failed:', error);
+      }
+    }
+  }, [currentAudioUrl, hasUserInteracted]);
+
+  const pauseAudio = useCallback(() => {
+    if (audioRef.current && !audioRef.current.paused) {
+      audioRef.current.pause();
+    }
+  }, []);
+
+  const toggleAudio = useCallback(async () => {
+    if (!audioRef.current) return;
+    
+    // Mark user interaction
+    if (!hasUserInteracted) {
+      setHasUserInteracted(true);
+      setShowPlayPrompt(false);
+    }
+    
+    if (isPlaying) {
+      pauseAudio();
+    } else {
+      if (currentAudioUrl) {
+        await playAudio(currentAudioUrl, true);
+      } else if (posts[currentPostIndex]?.summary_audio_url) {
+        await playAudio(posts[currentPostIndex].summary_audio_url, true);
+      }
+    }
+  }, [isPlaying, pauseAudio, hasUserInteracted, currentAudioUrl, posts, currentPostIndex, playAudio]);
+
+  const handleUserInteraction = useCallback(() => {
+    if (!hasUserInteracted) {
+      setHasUserInteracted(true);
+      setShowPlayPrompt(false);
+    }
+  }, [hasUserInteracted]);
+
+  const seekTo = useCallback((time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  }, []);
+
   // TikTok-style navigation functions
   const goToNextPost = useCallback(() => {
     if (isTransitioning.current) return;
@@ -115,6 +222,31 @@ export default function Home() {
     }
   }, [currentPostIndex, posts.length, hasMore, loadingMore, currentPage, fetchPosts, showToast]);
 
+  // Handle audio playback when current post changes
+  useEffect(() => {
+    if (posts.length === 0) return;
+    
+    const currentPost = posts[currentPostIndex];
+    if (currentPost?.summary_audio_url) {
+      // Post has audio - play it automatically
+      playAudio(currentPost.summary_audio_url);
+    } else {
+      // Post has no audio - pause current audio
+      pauseAudio();
+      setCurrentAudioUrl(null);
+    }
+  }, [currentPostIndex, posts, playAudio, pauseAudio]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
   const goToPreviousPost = useCallback(() => {
     if (isTransitioning.current) return;
     
@@ -130,7 +262,8 @@ export default function Home() {
   // Touch gesture handling
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
-  }, []);
+    handleUserInteraction();
+  }, [handleUserInteraction]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     touchEndY.current = e.changedTouches[0].clientY;
@@ -151,6 +284,7 @@ export default function Home() {
   // Wheel/scroll handling for desktop
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
+    handleUserInteraction();
     
     if (Math.abs(e.deltaY) > 10) {
       if (e.deltaY > 0) {
@@ -161,10 +295,11 @@ export default function Home() {
         goToPreviousPost();
       }
     }
-  }, [goToNextPost, goToPreviousPost]);
+  }, [goToNextPost, goToPreviousPost, handleUserInteraction]);
 
   // Keyboard navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    handleUserInteraction();
     if (e.key === 'ArrowDown' || e.key === ' ') {
       e.preventDefault();
       goToNextPost();
@@ -172,9 +307,11 @@ export default function Home() {
       e.preventDefault();
       goToPreviousPost();
     }
-  }, [goToNextPost, goToPreviousPost]);
+  }, [goToNextPost, goToPreviousPost, handleUserInteraction]);
 
   const handleLike = async (slug: string) => {
+    handleUserInteraction();
+    
     if (!isAuthenticated) {
       setShowLoginModal(true);
       return;
@@ -204,6 +341,8 @@ export default function Home() {
   };
 
   const handleBookmark = async (slug: string) => {
+    handleUserInteraction();
+    
     if (!isAuthenticated) {
       setShowLoginModal(true);
       return;
@@ -548,6 +687,66 @@ export default function Home() {
           </>
         )}
       </div>
+
+      {/* Audio Progress Bar - only show if current post has audio */}
+      {posts[currentPostIndex]?.summary_audio_url && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-sm border-t border-white/10">
+          {/* Play/Pause Button - centered above progress bar */}
+          <div className="flex justify-center pt-4 pb-2">
+            <div className="relative">
+              <Button
+                size="lg"
+                variant="ghost"
+                className="w-12 h-12 rounded-full audio-play-button bg-black/50 border border-white/10 text-white"
+                onClick={toggleAudio}
+              >
+                {isPlaying ? (
+                  <Pause className="h-5 w-5" />
+                ) : (
+                  <Play className="h-5 w-5 ml-0.5" />
+                )}
+              </Button>
+              
+              {/* User interaction required prompt */}
+              {showPlayPrompt && (
+                <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-black/90 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap border border-white/10">
+                  <div className="flex items-center">
+                    <Play className="h-3 w-3 mr-2 text-[#FE2C55]" />
+                    Tap to enable audio
+                  </div>
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-black/90"></div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="px-4 pb-3">
+            {/* Progress Bar */}
+            <div className="relative">
+              <div 
+                className="h-1 audio-progress-bar rounded-full cursor-pointer"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const percent = (e.clientX - rect.left) / rect.width;
+                  const newTime = percent * duration;
+                  seekTo(newTime);
+                }}
+              >
+                <div 
+                  className="h-1 audio-progress-fill rounded-full transition-all duration-100"
+                  style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                />
+              </div>
+              
+              {/* Time Display */}
+              <div className="flex justify-between items-center mt-2 text-xs text-[#AFAFAF]">
+                <span>{Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')}</span>
+                <span>{Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Login Modal */}
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
