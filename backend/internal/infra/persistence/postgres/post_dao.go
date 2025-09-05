@@ -48,8 +48,8 @@ func (dao *PostDAO) queryContext(ctx context.Context, query string, args ...inte
 
 func (dao *PostDAO) Create(ctx context.Context, m *Post) error {
 	query := `
-		INSERT INTO posts (id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO posts (id, author_id, title, slug, raw_markdown, summary, tags, published_at, created_at, updated_at, raw_markdown_audio_url, summary_audio_url)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
 
 	_, err := dao.execContext(
@@ -65,6 +65,8 @@ func (dao *PostDAO) Create(ctx context.Context, m *Post) error {
 		m.PublishedAt,
 		m.CreatedAt,
 		m.UpdatedAt,
+		m.RawMarkdownAudioURL,
+		m.SummaryAudioURL,
 	)
 
 	return err
@@ -78,11 +80,13 @@ func (dao *PostDAO) Update(ctx context.Context, m *Post) error {
 			slug = $3,
 			raw_markdown = $4,
 			summary = $5,
-			Tags = $6,
+			tags = $6,
 			published_at = $7,
 			created_at = $8,
-			updated_at = $9
-		WHERE id = $10
+			updated_at = $9,
+			raw_markdown_audio_url = $10,
+			summary_audio_url = $11
+		WHERE id = $12
 	`
 
 	_, err := dao.execContext(ctx, query,
@@ -95,6 +99,8 @@ func (dao *PostDAO) Update(ctx context.Context, m *Post) error {
 		m.PublishedAt,
 		m.CreatedAt,
 		m.UpdatedAt,
+		m.RawMarkdownAudioURL,
+		m.SummaryAudioURL,
 		m.ID,
 	)
 	return err
@@ -131,7 +137,7 @@ func (dao *PostDAO) DeleteByPk(ctx context.Context, pk string) error {
 
 func (dao *PostDAO) FindByPk(ctx context.Context, pk string) (*Post, error) {
 	query := `
-		SELECT id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at
+		SELECT id, author_id, title, slug, raw_markdown, summary, tags, published_at, created_at, updated_at, raw_markdown_audio_url, summary_audio_url
 		FROM posts
 		WHERE id = $1
 	`
@@ -149,6 +155,8 @@ func (dao *PostDAO) FindByPk(ctx context.Context, pk string) (*Post, error) {
 		&m.PublishedAt,
 		&m.CreatedAt,
 		&m.UpdatedAt,
+		&m.RawMarkdownAudioURL,
+		&m.SummaryAudioURL,
 	)
 
 	if err != nil {
@@ -164,11 +172,11 @@ func (dao *PostDAO) CreateMany(ctx context.Context, models []*Post) error {
 	}
 
 	placeholders := make([]string, len(models))
-	args := make([]interface{}, 0, len(models)*10)
+	args := make([]interface{}, 0, len(models)*12)
 
 	for i, model := range models {
-		placeholders[i] = fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
-			i*10+1, i*10+2, i*10+3, i*10+4, i*10+5, i*10+6, i*10+7, i*10+8, i*10+9, i*10+10)
+		placeholders[i] = fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+			i*12+1, i*12+2, i*12+3, i*12+4, i*12+5, i*12+6, i*12+7, i*12+8, i*12+9, i*12+10, i*12+11, i*12+12)
 
 		args = append(args,
 			model.ID,
@@ -181,11 +189,13 @@ func (dao *PostDAO) CreateMany(ctx context.Context, models []*Post) error {
 			model.PublishedAt,
 			model.CreatedAt,
 			model.UpdatedAt,
+			model.RawMarkdownAudioURL,
+			model.SummaryAudioURL,
 		)
 	}
 
 	query := fmt.Sprintf(`
-		INSERT INTO posts (id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at)
+		INSERT INTO posts (id, author_id, title, slug, raw_markdown, summary, tags, published_at, created_at, updated_at, raw_markdown_audio_url, summary_audio_url)
 		VALUES %s
 	`, strings.Join(placeholders, ", "))
 
@@ -205,11 +215,13 @@ func (dao *PostDAO) UpdateMany(ctx context.Context, models []*Post) error {
 			slug = $3,
 			raw_markdown = $4,
 			summary = $5,
-			Tags = $6,
+			tags = $6,
 			published_at = $7,
 			created_at = $8,
-			updated_at = $9
-		WHERE id = $10
+			updated_at = $9,
+			raw_markdown_audio_url = $10,
+			summary_audio_url = $11
+		WHERE id = $12
 	`
 
 	for _, model := range models {
@@ -223,6 +235,8 @@ func (dao *PostDAO) UpdateMany(ctx context.Context, models []*Post) error {
 			model.PublishedAt,
 			model.CreatedAt,
 			model.UpdatedAt,
+			model.RawMarkdownAudioURL,
+			model.SummaryAudioURL,
 			model.ID,
 		)
 		if err != nil {
@@ -252,7 +266,7 @@ func (dao *PostDAO) DeleteManyByPks(ctx context.Context, pks []string) error {
 
 func (dao *PostDAO) FindOne(ctx context.Context, where string, sort string, args ...interface{}) (*Post, error) {
 	query := `
-		SELECT id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at
+		SELECT id, author_id, title, slug, raw_markdown, summary, tags, published_at, created_at, updated_at, raw_markdown_audio_url, summary_audio_url
 		FROM posts
 	`
 
@@ -278,6 +292,8 @@ func (dao *PostDAO) FindOne(ctx context.Context, where string, sort string, args
 		&m.PublishedAt,
 		&m.CreatedAt,
 		&m.UpdatedAt,
+		&m.RawMarkdownAudioURL,
+		&m.SummaryAudioURL,
 	)
 
 	if err != nil {
@@ -289,7 +305,7 @@ func (dao *PostDAO) FindOne(ctx context.Context, where string, sort string, args
 
 func (dao *PostDAO) FindAll(ctx context.Context, where string, sort string, args ...interface{}) ([]*Post, error) {
 	query := `
-		SELECT id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at
+		SELECT id, author_id, title, slug, raw_markdown, summary, tags, published_at, created_at, updated_at, raw_markdown_audio_url, summary_audio_url
 		FROM posts
 	`
 
@@ -321,6 +337,8 @@ func (dao *PostDAO) FindAll(ctx context.Context, where string, sort string, args
 			&m.PublishedAt,
 			&m.CreatedAt,
 			&m.UpdatedAt,
+			&m.RawMarkdownAudioURL,
+			&m.SummaryAudioURL,
 		)
 		if err != nil {
 			return nil, err
@@ -337,7 +355,7 @@ func (dao *PostDAO) FindAll(ctx context.Context, where string, sort string, args
 
 func (dao *PostDAO) FindPaginated(ctx context.Context, limit, offset int, where string, sort string, args ...interface{}) ([]*Post, error) {
 	query := `
-		SELECT id, author_id, title, slug, raw_markdown, summary, Tags, published_at, created_at, updated_at
+		SELECT id, author_id, title, slug, raw_markdown, summary, tags, published_at, created_at, updated_at, raw_markdown_audio_url, summary_audio_url
 		FROM posts
 	`
 
@@ -371,6 +389,8 @@ func (dao *PostDAO) FindPaginated(ctx context.Context, limit, offset int, where 
 			&m.PublishedAt,
 			&m.CreatedAt,
 			&m.UpdatedAt,
+			&m.RawMarkdownAudioURL,
+			&m.SummaryAudioURL,
 		)
 		if err != nil {
 			return nil, err
