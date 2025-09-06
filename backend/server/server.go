@@ -88,6 +88,11 @@ func New(cfg config.Config, db *sql.DB) *gin.Engine {
 			api.POST("/users/:author_id/follow", handlers.FollowUser(followUserServ))
 			api.DELETE("/users/:author_id/follow", handlers.UnfollowUser(unfollowUserServ))
 		}
+
+		api.Use(middlewares.HasProcessorAuthorization(cfg.ProcessorSecret, cfg.ProcessorUserID))
+		{
+			api.POST("/processor/posts", handlers.CreatePost(createPostServ))
+		}
 	}
 
 	router.GET("/api/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

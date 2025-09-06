@@ -20,6 +20,8 @@ type Config struct {
 	GoogleClientSecret string `env:"GOOGLE_CLIENT_SECRET"`
 	OpenAIApiKey       string `env:"OPENAI_API_KEY"`
 	TriggerSecretKey   string `env:"TRIGGER_SECRET_KEY"`
+	ProcessorSecret    string `env:"PROCESSOR_SECRET"`
+	ProcessorUserID    string `env:"PROCESSOR_USER_ID"`
 }
 
 func Load() Config {
