@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\processor/**)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\processor/**)",
+      "Read(/C:\\Users\\Ignac\\Documentos\\Github\\blog0\\processor\\src\\trigger/**)",
+      "Bash(bun add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
